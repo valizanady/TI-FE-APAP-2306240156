@@ -10,10 +10,11 @@ export const usePackageStore = defineStore('package', {
   state: () => ({
     items: [] as Package[],
     isLoading: false,
-    error: ''
+    error: '',
   }),
 
   actions: {
+    // ✅ Fetch all packages
     async fetchAll() {
       this.isLoading = true
       this.error = ''
@@ -23,10 +24,17 @@ export const usePackageStore = defineStore('package', {
         const res = await axios.get<CommonResponse<Package[]>>(`${API}package`)
         console.log('🧩 Raw API response:', res.data)
 
-        // FIX: ambil data dari "res.data.data"
-        this.items = Array.isArray(res.data.data) ? res.data.data : []
-        console.log('✅ stored items:', this.items)
-     } catch (e) {
+        // ambil data dari res.data.data dan filter yang tidak deleted
+        const allPackages = Array.isArray(res.data.data) ? res.data.data : []
+
+        // Filter out soft deleted packages (status !== 'DELETED')
+        this.items = allPackages.filter((pkg) => pkg.status !== 'DELETED' && !pkg.isDeleted)
+
+        console.log('✅ stored items (after filtering deleted):', this.items)
+        console.log(
+          `📊 Total: ${allPackages.length}, Active: ${this.items.length}, Deleted: ${allPackages.length - this.items.length}`,
+        )
+      } catch (e) {
         if (e instanceof Error) {
           this.error = e.message
         } else {
@@ -38,6 +46,61 @@ export const usePackageStore = defineStore('package', {
         console.log('🎯 Final items count:', this.items.length)
       }
       console.log('🧭 All env:', import.meta.env)
-    }
-  }
+    },
+
+    // ✅ Delete package (soft delete)
+    async deletePackage(id: string) {
+      this.isLoading = true
+      this.error = ''
+
+      try {
+        console.log('🗑️  Soft deleting package:', id)
+
+        // Soft delete endpoint
+        await axios.delete(`${API}package/${id}/delete`)
+
+        console.log('✅ Package soft deleted successfully')
+
+        // Refresh the list
+        await this.fetchAll()
+
+        return true
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      } catch (e: any) {
+        console.error('❌ Delete error:', e)
+        this.error = e.response?.data?.message || 'Failed to delete package'
+        throw new Error(this.error)
+      } finally {
+        this.isLoading = false
+      }
+    },
+
+    // ✅ Create new package
+    async create(payload: {
+      packageName: string
+      userId: string
+      quota: number
+      startDate: string
+      endDate: string
+    }) {
+      this.isLoading = true
+      this.error = ''
+
+      try {
+        console.log('🚀 Creating package:', payload)
+        const res = await axios.post<CommonResponse<Package>>(`${API}package/create`, payload)
+
+        console.log('✅ Package created:', res.data)
+        await this.fetchAll()
+        return res.data.data
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      } catch (e: any) {
+        console.error('❌ Create error:', e)
+        this.error = e.response?.data?.message ?? e.message ?? 'Failed to create package'
+        throw e
+      } finally {
+        this.isLoading = false
+      }
+    },
+  },
 })

@@ -6,13 +6,22 @@
         <div class="header-content">
           <div class="header-text">
             <h1 class="packages-title">Tour Packages</h1>
-            <p class="packages-subtitle">
-              Manage and explore your tour packages
-            </p>
+            <p class="packages-subtitle">Manage and explore your tour packages</p>
           </div>
           <div class="stats-badge">
-            <svg xmlns="http://www.w3.org/2000/svg" class="stats-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              class="stats-icon"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"
+              />
             </svg>
             <div>
               <div class="stats-number">{{ filteredPackages.length }}</div>
@@ -34,8 +43,12 @@
               viewBox="0 0 24 24"
               stroke="currentColor"
             >
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+              />
             </svg>
             <input
               v-model="searchQuery"
@@ -45,16 +58,31 @@
             />
             <span v-if="searchQuery" class="search-clear" @click="searchQuery = ''">
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
+                <path
+                  fill-rule="evenodd"
+                  d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
+                  clip-rule="evenodd"
+                />
               </svg>
             </span>
           </div>
 
           <!-- Action Buttons -->
           <div class="toolbar-actions">
-            <button class="btn btn-primary">
-              <svg xmlns="http://www.w3.org/2000/svg" class="btn-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+            <button class="btn btn-primary" @click="router.push('/package/create')">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                class="btn-icon"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M12 4v16m8-8H4"
+                />
               </svg>
               Add Package
             </button>
@@ -71,17 +99,43 @@
       <!-- Enhanced Empty State -->
       <div v-else-if="filteredPackages.length === 0" class="state-card">
         <div class="empty-icon-wrapper">
-          <svg xmlns="http://www.w3.org/2000/svg" class="state-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            class="state-icon"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+            />
           </svg>
         </div>
         <h3 class="state-title">No packages found</h3>
         <p class="state-description">
-          {{ searchQuery ? 'Try different search terms or clear your search' : 'Create your first tour package to get started' }}
+          {{
+            searchQuery
+              ? 'Try different search terms or clear your search'
+              : 'Create your first tour package to get started'
+          }}
         </p>
         <button v-if="!searchQuery" class="btn btn-primary btn-large">
-          <svg xmlns="http://www.w3.org/2000/svg" class="btn-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            class="btn-icon"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M12 4v16m8-8H4"
+            />
           </svg>
           Create Your First Package
         </button>
@@ -111,7 +165,7 @@ import { useRouter } from 'vue-router'
 import { usePackageStore } from '@/stores/package'
 import VDataTable from '/Users/valizanadya/Documents/SMT 5/APAP/tugas individu/tour-package-2306240156-fe/src/components/common/VDataTable.vue'
 import VButton from '@/components/common/VButton.vue'
-import VDeletePackageButton from '@/components/package/VDeletePackageButton.vue'
+import VDeleteButton from '@/components/package/VDeleteButton.vue'
 import type { ColumnDef } from '@tanstack/vue-table'
 import type { Package } from '@/interfaces/package.interface'
 
@@ -126,7 +180,7 @@ onMounted(async () => {
 
 const filteredPackages = computed(() => {
   return store.items.filter((p) =>
-    p.packageName.toLowerCase().includes(searchQuery.value.toLowerCase())
+    p.packageName.toLowerCase().includes(searchQuery.value.toLowerCase()),
   )
 })
 
@@ -134,8 +188,7 @@ const columns: ColumnDef<Package>[] = [
   {
     accessorKey: 'packageName',
     header: 'Package Name',
-    cell: ({ row }) =>
-      h('div', { class: 'cell-package-name' }, row.original.packageName)
+    cell: ({ row }) => h('div', { class: 'cell-package-name' }, row.original.packageName),
   },
   {
     header: 'Period',
@@ -143,26 +196,25 @@ const columns: ColumnDef<Package>[] = [
       const start = new Date(row.original.startDate).toLocaleDateString('id-ID', {
         day: 'numeric',
         month: 'short',
-        year: 'numeric'
+        year: 'numeric',
       })
       const end = new Date(row.original.endDate).toLocaleDateString('id-ID', {
         day: 'numeric',
         month: 'short',
-        year: 'numeric'
+        year: 'numeric',
       })
       return h('div', { class: 'cell-period' }, `${start} - ${end}`)
-    }
+    },
   },
   {
     accessorKey: 'quota',
     header: 'Quota',
-    cell: ({ row }) =>
-      h('span', { class: 'badge badge-blue' }, `${row.original.quota} pax`)
+    cell: ({ row }) => h('span', { class: 'badge badge-blue' }, `${row.original.quota} pax`),
   },
   {
     header: 'Price',
     cell: ({ row }) =>
-      h('div', { class: 'cell-price' }, `Rp ${row.original.price.toLocaleString('id-ID')}`)
+      h('div', { class: 'cell-price' }, `Rp ${row.original.price.toLocaleString('id-ID')}`),
   },
   {
     accessorKey: 'status',
@@ -171,13 +223,12 @@ const columns: ColumnDef<Package>[] = [
       const isProcessed = row.original.status === 'Processed'
       const badgeClass = isProcessed ? 'badge badge-green' : 'badge badge-yellow'
       return h('span', { class: badgeClass }, row.original.status)
-    }
+    },
   },
   {
     accessorKey: 'userId',
     header: 'User ID',
-    cell: ({ row }) =>
-      h('span', { class: 'cell-user-id' }, row.original.userId)
+    cell: ({ row }) => h('span', { class: 'cell-user-id' }, row.original.userId),
   },
   {
     header: 'Actions',
@@ -189,25 +240,25 @@ const columns: ColumnDef<Package>[] = [
           {
             variant: 'primary',
             size: 'sm',
-            onClick: () => router.push(`/package/${row.original.id}`)
+            onClick: () => router.push(`/package/${row.original.id}`),
           },
-          () => 'Details'
+          () => 'Details',
         ),
         h(
           VButton,
           {
             variant: 'success',
             size: 'sm',
-            onClick: () => router.push(`/package/${row.original.id}/edit`)
+            onClick: () => router.push(`/package/${row.original.id}/edit`),
           },
-          () => 'Edit'
+          () => 'Edit',
         ),
-        h(VDeletePackageButton, {
+        h(VDeleteButton, {
           packageId: row.original.id,
-          redirectTo: '/packages'
-        })
-      ])
-  }
+          redirectTo: '/package',
+        }),
+      ]),
+  },
 ]
 </script>
 
@@ -230,7 +281,9 @@ const columns: ColumnDef<Package>[] = [
   border-radius: 1rem;
   padding: 2rem;
   margin-bottom: 1.5rem;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  box-shadow:
+    0 4px 6px -1px rgba(0, 0, 0, 0.1),
+    0 2px 4px -1px rgba(0, 0, 0, 0.06);
 }
 
 .header-content {
@@ -297,13 +350,16 @@ const columns: ColumnDef<Package>[] = [
   border-radius: 1rem;
   padding: 1.5rem;
   margin-bottom: 1.5rem;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  box-shadow:
+    0 4px 6px -1px rgba(0, 0, 0, 0.1),
+    0 2px 4px -1px rgba(0, 0, 0, 0.06);
 }
 
 .toolbar-content {
   display: flex;
   gap: 1rem;
   align-items: center;
+  justify-content: space-between;
   flex-wrap: wrap;
 }
 
@@ -427,7 +483,9 @@ const columns: ColumnDef<Package>[] = [
   border-radius: 1rem;
   padding: 4rem 2rem;
   text-align: center;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  box-shadow:
+    0 4px 6px -1px rgba(0, 0, 0, 0.1),
+    0 2px 4px -1px rgba(0, 0, 0, 0.06);
 }
 
 .empty-icon-wrapper {
@@ -491,7 +549,9 @@ const columns: ColumnDef<Package>[] = [
   background: white;
   border-radius: 1rem;
   overflow: hidden;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  box-shadow:
+    0 4px 6px -1px rgba(0, 0, 0, 0.1),
+    0 2px 4px -1px rgba(0, 0, 0, 0.06);
   padding: 1.5rem;
 }
 

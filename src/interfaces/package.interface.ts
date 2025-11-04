@@ -19,5 +19,6 @@ export interface Package {
   status: string
   startDate: string
   endDate: string
+  isDeleted?: boolean
   plans: Plan[] // ✅ tambahkan ini
 }
