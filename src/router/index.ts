@@ -1,6 +1,7 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import HomeView from '../views/HomeView.vue'
 import PackageView from '@/views/PackageView.vue'
+import PackageDetailView from '@/views/PackageDetailView.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -15,6 +16,13 @@ const router = createRouter({
       name: 'package',
       component: PackageView
     },
+
+    {
+    path: '/package/:id',
+    name: 'PackageDetail',
+    component: PackageDetailView
+  }
+
   ]
 })
 
