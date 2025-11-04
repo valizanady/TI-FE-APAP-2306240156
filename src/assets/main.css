@@ -2,22 +2,66 @@
 @tailwind components;
 @tailwind utilities;
 
-/* ✅ Reset warna default browser */
+/* ✅ Reset & Base Styles */
 html, body, #app {
   margin: 0;
   padding: 0;
   width: 100%;
   height: 100%;
-  background-color: #ffffff; /* Putih bersih */
-  color: #1f2937; /* Abu gelap */
-  font-family: 'Inter', sans-serif;
+  background-color: #ffffff;
+  color: #1f2937;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
 }
 
+/* ✅ Link Styles */
 a {
-  color: #6b46c1; /* Ungu link */
+  color: #6b46c1;
   text-decoration: none;
+  transition: color 0.2s ease;
 }
 
 a:hover {
+  color: #553c9a;
   text-decoration: underline;
+}
+
+/* ✅ Button Base */
+button {
+  font-family: inherit;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* ✅ Input Base */
+input, textarea, select {
+  font-family: inherit;
+  font-size: inherit;
+}
+
+input:focus, textarea:focus, select:focus {
+  outline: none;
+}
+
+/* ✅ Scrollbar Styling (optional) */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
 }

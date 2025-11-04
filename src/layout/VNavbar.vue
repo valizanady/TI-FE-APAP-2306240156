@@ -26,9 +26,9 @@ const route = useRoute()
           Activities
         </RouterLink>
         <RouterLink
-          to="/packages"
+          to="/package"
           class="nav-link"
-          :class="{ active: route.name === 'packages' }"
+          :class="{ active: route.name === 'package' }"
         >
           Packages
         </RouterLink>
@@ -52,7 +52,6 @@ const route = useRoute()
   position: sticky;
   top: 0;
   z-index: 50;
-  transition: all 0.3s ease;
 }
 
 .navbar-container {
@@ -70,13 +69,8 @@ const route = useRoute()
   font-size: 1.25rem;
   font-weight: 700;
   text-decoration: none;
-  color: #c026d3; /* 🎨 fuchsia tua */
+  color: #6d28d9;
   font-family: 'Inter', sans-serif;
-  transition: color 0.25s ease;
-}
-
-.brand:hover {
-  color: #a21caf; /* sedikit lebih gelap pas hover */
 }
 
 /* Navigation links */
@@ -91,26 +85,21 @@ const route = useRoute()
   font-weight: 500;
   text-decoration: none;
   color: #374151;
-  padding: 0.5rem 1rem;
+  padding: 0.4rem 0.75rem;
   border-radius: 8px;
   transition: all 0.25s ease;
-  position: relative;
 }
 
-/* Hover fuchsia glow */
 .nav-link:hover {
-  color: #c026d3;
-  background-color: rgba(240, 171, 252, 0.15);
-  box-shadow: 0 2px 10px rgba(192, 38, 211, 0.25);
-  transform: translateY(-1px);
+  background-color: #f3e8ff;
+  color: #6d28d9;
 }
 
-/* Active tab (pressed / current route) */
+/* Active tab */
 .nav-link.active {
-  background-color: #c026d3;
+  background-color: #6d28d9;
   color: #ffffff;
-  box-shadow: 0 3px 10px rgba(192, 38, 211, 0.4);
-  transform: translateY(-1px);
+  box-shadow: 0 2px 6px rgba(109, 40, 217, 0.3);
 }
 
 /* Responsive */
