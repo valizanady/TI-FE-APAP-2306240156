@@ -75,6 +75,45 @@ export const usePackageStore = defineStore('package', {
       }
     },
 
+    // ✅ Update package
+    async update(
+      id: string,
+      data: {
+        packageName: string
+        startDate: string
+        endDate: string
+        quota: number
+      },
+    ) {
+      this.isLoading = true
+      this.error = ''
+
+      try {
+        console.log('� Updating package:', id, data)
+
+        const response = await axios.put(`${API}package/${id}/edit`, data, {
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        })
+
+        console.log('✅ Package updated successfully:', response.data)
+
+        // Refresh the list
+        await this.fetchAll()
+
+        return response.data
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      } catch (e: any) {
+        console.error('❌ Update error:', e)
+        console.error('❌ Error response:', e.response?.data)
+        this.error = e.response?.data?.message || 'Failed to update package'
+        throw new Error(this.error)
+      } finally {
+        this.isLoading = false
+      }
+    },
+
     // ✅ Create new package
     async create(payload: {
       packageName: string

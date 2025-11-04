@@ -8,7 +8,9 @@
     </div>
 
     <!-- Card -->
-    <div class="w-full max-w-3xl bg-white rounded-3xl shadow-lg border border-gray-100 overflow-hidden">
+    <div
+      class="w-full max-w-3xl bg-white rounded-3xl shadow-lg border border-gray-100 overflow-hidden"
+    >
       <!-- Gradient Header -->
       <div class="bg-gradient-to-r from-indigo-500 to-purple-500 px-6 py-4">
         <h2 class="text-white text-lg font-semibold tracking-wide">Package Information</h2>
@@ -57,23 +59,13 @@
           <!-- Start Date -->
           <div>
             <label class="form-label">Start Date *</label>
-            <input
-              v-model="form.startDate"
-              type="datetime-local"
-              class="form-input"
-              required
-            />
+            <input v-model="form.startDate" type="datetime-local" class="form-input" required />
           </div>
 
           <!-- End Date -->
           <div>
             <label class="form-label">End Date *</label>
-            <input
-              v-model="form.endDate"
-              type="datetime-local"
-              class="form-input"
-              required
-            />
+            <input v-model="form.endDate" type="datetime-local" class="form-input" required />
           </div>
         </div>
 
@@ -118,7 +110,7 @@ const form = reactive({
   userId: '',
   quota: 1,
   startDate: '',
-  endDate: ''
+  endDate: '',
 })
 
 const onSubmit = async () => {
@@ -130,7 +122,7 @@ const onSubmit = async () => {
   try {
     await store.create(form)
     router.push('/package')
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
   } catch (e: any) {
     errorMsg.value = e.response?.data?.message ?? e.message
   }
@@ -141,9 +133,26 @@ const onCancel = () => router.push('/package')
 
 <style scoped>
 .form-label {
-  @apply block text-sm font-semibold text-gray-700 mb-1;
+  display: block;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #374151;
+  margin-bottom: 0.25rem;
 }
+
 .form-input {
-  @apply w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-gray-800 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition;
+  width: 100%;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid #d1d5db;
+  border-radius: 0.5rem;
+  background-color: white;
+  color: #1f2937;
+  transition: all 0.2s ease;
+}
+
+.form-input:focus {
+  outline: none;
+  border-color: #6366f1;
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
 }
 </style>
