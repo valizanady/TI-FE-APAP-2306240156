@@ -33,3 +33,30 @@ export interface Regency {
   name: string
   province_code: string
 }
+
+export interface OrderedQuantity {
+  id: string
+  activityName: string
+  activityId: string
+  startDate: string
+  endDate: string
+  price: number
+  quota: number
+  orderedQuota: number
+  total: number
+}
+
+export interface PlanDetail {
+  id: string
+  planName: string
+  activityType: string
+  status: string
+  startDate: string
+  endDate: string
+  startLocation: string
+  endLocation: string
+  price: number
+  packageId: string
+  packageName: string
+  orderedQuantities: OrderedQuantity[]
+}

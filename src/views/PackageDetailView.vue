@@ -274,6 +274,7 @@
                 <th>Period</th>
                 <th>Price</th>
                 <th>Status</th>
+                <th>Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -360,6 +361,35 @@
                 </td>
                 <td>
                   <span :class="statusBadge(plan.status)">{{ plan.status }}</span>
+                </td>
+                <td>
+                  <button
+                    class="btn-view"
+                    @click="router.push(`/plans/${plan.id}`)"
+                    title="View Plan Details"
+                  >
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      class="btn-icon"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+                      />
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
+                      />
+                    </svg>
+                    View
+                  </button>
                 </td>
               </tr>
             </tbody>
@@ -514,6 +544,33 @@ function statusBadge(status?: string) {
 
 .btn-danger:hover {
   background-color: #fecaca;
+}
+
+/* View Button */
+.btn-view {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.5rem 0.875rem;
+  background: linear-gradient(135deg, #6b46c1 0%, #8b5cf6 100%);
+  color: white;
+  border: none;
+  border-radius: 0.375rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-view:hover {
+  background: linear-gradient(135deg, #5a3ca1 0%, #7c4ee6 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 6px -1px rgba(107, 70, 193, 0.2);
+}
+
+.btn-view .btn-icon {
+  width: 1rem;
+  height: 1rem;
 }
 
 /* Info Grid */

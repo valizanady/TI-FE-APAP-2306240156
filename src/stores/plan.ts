@@ -1,10 +1,15 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-// src/stores/plan/plan.store.ts
+
 
 import { defineStore } from 'pinia'
-import { PlanService } from '/Users/valizanadya/Documents/SMT 5/APAP/tugas individu/tour-package-2306240156-fe/src/services/plan.service.ts'
+import { PlanService } from '@/services/plan.service'
 import { LocationService } from '@/services/location.service'
-import type { CreatePlanRequest, Province, Regency } from '@/interfaces/plan.interface'
+import type {
+  CreatePlanRequest,
+  Province,
+  Regency,
+  PlanDetail
+} from '@/interfaces/plan.interface'
 
 const planService = new PlanService()
 const locationService = new LocationService()
@@ -14,6 +19,7 @@ export const usePlanStore = defineStore('plan', {
     provinces: [] as Province[],
     startRegencies: [] as Regency[],
     endRegencies: [] as Regency[],
+    currentPlan: null as PlanDetail | null,
     loading: false,
     error: null as string | null,
   }),
@@ -50,6 +56,19 @@ export const usePlanStore = defineStore('plan', {
       this.loading = true
       try {
         await planService.create(packageId, data)
+      } catch (e: any) {
+        this.error = e.response?.data?.message || e.message
+        throw e
+      } finally {
+        this.loading = false
+      }
+    },
+
+    async getPlanDetail(id: string) {
+      this.loading = true
+      this.error = null
+      try {
+        this.currentPlan = await planService.getById(id)
       } catch (e: any) {
         this.error = e.response?.data?.message || e.message
         throw e

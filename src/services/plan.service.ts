@@ -1,13 +1,15 @@
 // src/services/plan.service.ts
 
 import axios from 'axios'
-import type { CreatePlanRequest } from '/Users/valizanadya/Documents/SMT 5/APAP/tugas individu/tour-package-2306240156-fe/src/interfaces/plan.interface.ts'
+import type { CreatePlanRequest, PlanDetail } from '@/interfaces/plan.interface'
 
 const BASE_URL = import.meta.env.VITE_API_BASE_URL
 
 export class PlanService {
+  /**
+   * Create new plan for package
+   */
   async create(packageId: string, data: CreatePlanRequest) {
-    // Sesuai requirement: POST /packages/{id}/plans/create
     const url = `${BASE_URL}packages/${packageId}/plans/create`
     console.log('🔗 Request URL:', url)
     console.log('📦 Request Data:', JSON.stringify(data, null, 2))
@@ -27,6 +29,28 @@ export class PlanService {
         status: error.response?.status,
         statusText: error.response?.statusText,
         data: error.response?.data,
+        message: error.message
+      })
+      throw error
+    }
+  }
+
+  /**
+   * Get plan detail by ID
+   */
+  async getById(id: string): Promise<PlanDetail> {
+    const url = `${BASE_URL}plans/${id}`
+    console.log('🔗 Fetching plan detail:', url)
+
+    try {
+      const res = await axios.get(url)
+      console.log('✅ Plan detail retrieved:', res.data)
+      return res.data.data
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } catch (error: any) {
+      console.error('❌ Failed to fetch plan:', {
+        url,
+        status: error.response?.status,
         message: error.message
       })
       throw error
