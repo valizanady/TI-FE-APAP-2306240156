@@ -50,6 +50,12 @@ const router = createRouter({
       component: ViewPlanView
     },
 
+    {
+      path: '/plans/:id/edit',
+      name: 'EditPlan',
+      component: () => import('@/views/EditPlanView.vue')
+    },
+
     // Placeholder routes (will be implemented later)
     {
       path: '/activities',

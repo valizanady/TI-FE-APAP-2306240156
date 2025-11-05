@@ -1,4 +1,3 @@
-
 // src/interfaces/plan.interface.ts
 
 export interface Plan {
@@ -17,6 +16,14 @@ export interface Plan {
 export interface CreatePlanRequest {
   planName: string
   activityType: string
+  startDate: string
+  endDate: string
+  startLocation: string
+  endLocation: string
+}
+
+export interface UpdatePlanRequest {
+  planName: string
   startDate: string
   endDate: string
   startLocation: string
@@ -58,5 +65,6 @@ export interface PlanDetail {
   price: number
   packageId: string
   packageName: string
+  packageStatus: string  // Remove optional, make it required
   orderedQuantities: OrderedQuantity[]
 }

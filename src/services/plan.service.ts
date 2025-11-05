@@ -1,7 +1,8 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 // src/services/plan.service.ts
 
 import axios from 'axios'
-import type { CreatePlanRequest, PlanDetail } from '@/interfaces/plan.interface'
+import type { CreatePlanRequest, PlanDetail, UpdatePlanRequest } from '@/interfaces/plan.interface'
 
 const BASE_URL = import.meta.env.VITE_API_BASE_URL
 
@@ -22,7 +23,6 @@ export class PlanService {
       })
       console.log('✅ Response:', res.data)
       return res.data.data
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {
       console.error('❌ Request failed:', {
         url,
@@ -46,12 +46,60 @@ export class PlanService {
       const res = await axios.get(url)
       console.log('✅ Plan detail retrieved:', res.data)
       return res.data.data
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {
       console.error('❌ Failed to fetch plan:', {
         url,
         status: error.response?.status,
         message: error.message
+      })
+      throw error
+    }
+  }
+
+  /**
+   * Get plan for editing
+   */
+  async getForEdit(id: string): Promise<PlanDetail> {
+    const url = `${BASE_URL}plans/${id}/edit`
+    console.log('🔗 Fetching plan for edit:', url)
+
+    try {
+      const res = await axios.get(url)
+      console.log('✅ Plan edit data retrieved:', res.data)
+      console.log('📦 Package Status:', res.data.data?.packageStatus)
+      return res.data.data
+    } catch (error: any) {
+      console.error('❌ Failed to fetch plan for edit:', {
+        url,
+        status: error.response?.status,
+        message: error.message
+      })
+      throw error
+    }
+  }
+
+  /**
+   * Update plan
+   */
+  async update(id: string, data: UpdatePlanRequest): Promise<PlanDetail> {
+    const url = `${BASE_URL}plans/${id}/edit`
+    console.log('🔗 Updating plan:', url)
+    console.log('📦 Update data:', JSON.stringify(data, null, 2))
+
+    try {
+      const res = await axios.put(url, data, {
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      })
+      console.log('✅ Plan updated:', res.data)
+      return res.data.data
+    } catch (error: any) {
+      console.error('❌ Failed to update plan:', {
+        url,
+        status: error.response?.status,
+        message: error.message,
+        data: error.response?.data
       })
       throw error
     }

@@ -131,7 +131,12 @@
               >
                 View Package
               </button>
-              <button class="btn btn-primary">Edit Plan</button>
+              <button
+                class="btn btn-primary"
+                @click="$router.push(`/plans/${plan.id}/edit`)"
+              >
+                Edit Plan
+              </button>
               <button class="btn btn-danger">Delete Plan</button>
             </div>
           </div>
