@@ -200,10 +200,34 @@
       <!-- Plans Table -->
       <div class="plans-section">
         <div class="section-header">
-          <h2 class="section-title">
+          <div class="section-header-left">
+            <h2 class="section-title">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                class="section-icon"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"
+                />
+              </svg>
+              Travel Plans
+            </h2>
+            <span class="plans-count">{{ pkg?.plans?.length || 0 }} plans</span>
+          </div>
+          <button
+            v-if="pkg?.status === 'Pending'"
+            class="btn btn-primary"
+            @click="router.push(`/package/${route.params.id}/plans/create`)"
+          >
             <svg
               xmlns="http://www.w3.org/2000/svg"
-              class="section-icon"
+              class="btn-icon"
               fill="none"
               viewBox="0 0 24 24"
               stroke="currentColor"
@@ -212,12 +236,11 @@
                 stroke-linecap="round"
                 stroke-linejoin="round"
                 stroke-width="2"
-                d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"
+                d="M12 4v16m8-8H4"
               />
             </svg>
-            Travel Plans
-          </h2>
-          <span class="plans-count">{{ pkg?.plans?.length || 0 }} plans</span>
+            Create New Plan
+          </button>
         </div>
 
         <div v-if="!pkg?.plans || pkg.plans.length === 0" class="empty-plans">
@@ -236,6 +259,9 @@
             />
           </svg>
           <p class="empty-text">No plans available for this package</p>
+          <p class="empty-subtext">
+            Click "Create New Plan" button above to add your first plan
+          </p>
         </div>
 
         <div v-else class="table-container">
@@ -460,6 +486,16 @@ function statusBadge(status?: string) {
   height: 1.125rem;
 }
 
+.btn-primary {
+  background: linear-gradient(135deg, #6b46c1 0%, #8b5cf6 100%);
+  color: #ffffff;
+  border: none;
+}
+
+.btn-primary:hover {
+  background: linear-gradient(135deg, #5a3ca1 0%, #7c4ee6 100%);
+}
+
 .btn-secondary {
   background-color: #ffffff;
   color: #374151;
@@ -561,7 +597,7 @@ function statusBadge(status?: string) {
   font-size: 1.125rem;
   font-weight: 600;
   color: #1f2937;
-  margin: 0 0 1rem 0;
+  margin: 0;
   display: flex;
   align-items: center;
   gap: 0.5rem;
@@ -578,6 +614,7 @@ function statusBadge(status?: string) {
   align-items: center;
   justify-content: space-between;
   gap: 2rem;
+  margin-top: 1rem;
 }
 
 .period-item {
@@ -625,6 +662,14 @@ function statusBadge(status?: string) {
   justify-content: space-between;
   align-items: center;
   margin-bottom: 1.5rem;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.section-header-left {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
 }
 
 .plans-count {
@@ -650,6 +695,13 @@ function statusBadge(status?: string) {
 }
 
 .empty-text {
+  color: #1f2937;
+  font-size: 1rem;
+  font-weight: 600;
+  margin: 0 0 0.5rem 0;
+}
+
+.empty-subtext {
   color: #6b7280;
   font-size: 0.875rem;
   margin: 0;
@@ -813,6 +865,20 @@ function statusBadge(status?: string) {
 
   .route-arrow {
     transform: rotate(90deg);
+  }
+
+  .section-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .section-header-left {
+    width: 100%;
+  }
+
+  .btn-primary {
+    width: 100%;
+    justify-content: center;
   }
 }
 </style>

@@ -1,0 +1,35 @@
+
+// src/interfaces/plan.interface.ts
+
+export interface Plan {
+  id?: string
+  planName: string
+  activityType: string
+  status: string
+  startDate: string
+  endDate: string
+  startLocation: string
+  endLocation: string
+  price: number
+  packageId: string
+}
+
+export interface CreatePlanRequest {
+  planName: string
+  activityType: string
+  startDate: string
+  endDate: string
+  startLocation: string
+  endLocation: string
+}
+
+export interface Province {
+  code: string
+  name: string
+}
+
+export interface Regency {
+  code: string
+  name: string
+  province_code: string
+}

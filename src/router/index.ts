@@ -4,6 +4,7 @@ import PackageView from '@/views/PackageView.vue'
 import PackageDetailView from '@/views/PackageDetailView.vue'
 import CreatePackageView from '/Users/valizanadya/Documents/SMT 5/APAP/tugas individu/tour-package-2306240156-fe/src/views/CreatePackageView.vue'
 import EditPackageView from '@/views/EditPackageView.vue'
+import CreatePlanView from '@/views/CreatePlanView.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -35,6 +36,12 @@ const router = createRouter({
       name: 'EditPackage',
       component: EditPackageView,
     },
+
+    {
+    path: '/package/:id/plans/create',
+    name: 'create-plan',
+    component: CreatePlanView,
+  },
 
     // Placeholder routes (will be implemented later)
     {
