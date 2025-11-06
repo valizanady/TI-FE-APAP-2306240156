@@ -24,19 +24,15 @@ export const usePlanStore = defineStore('plan', {
         const requestData = {
           ...data,
           startDate: toLocalDateTimeString(data.startDate),
-          endDate: toLocalDateTimeString(data.endDate)
+          endDate: toLocalDateTimeString(data.endDate),
         }
 
         console.log('📤 Sending request:', requestData)
 
-        const res = await axios.post(
-          `${BASE_URL}package/${packageId}/plans/create`,
-          requestData
-        )
+        const res = await axios.post(`${BASE_URL}package/${packageId}/plans/create`, requestData)
 
         console.log('✅ Plan created:', res.data)
         return res.data.data
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       } catch (e: any) {
         this.error = e.response?.data?.message || e.message
         console.error('❌ Failed to create plan:', this.error)
@@ -55,15 +51,12 @@ export const usePlanStore = defineStore('plan', {
         const requestData = {
           ...data,
           startDate: toLocalDateTimeString(data.startDate),
-          endDate: toLocalDateTimeString(data.endDate)
+          endDate: toLocalDateTimeString(data.endDate),
         }
 
         console.log('📤 Sending update request:', requestData)
 
-        const res = await axios.put(
-          `${BASE_URL}plans/${planId}/edit`,
-          requestData
-        )
+        const res = await axios.put(`${BASE_URL}plans/${planId}/edit`, requestData)
 
         console.log('✅ Plan updated:', res.data)
         return res.data.data
@@ -92,8 +85,49 @@ export const usePlanStore = defineStore('plan', {
       }
     },
 
+    async getPlanForEdit(planId: string) {
+      this.loading = true
+      this.error = null
+
+      try {
+        const res = await axios.get(`${BASE_URL}plans/${planId}`)
+        const plan = res.data.data
+
+        // Check if plan is deleted
+        if (plan.isDeleted) {
+          throw new Error('This plan has been deleted and cannot be edited')
+        }
+
+        this.currentPlan = plan
+        return plan
+      } catch (e: any) {
+        this.error = e.response?.data?.message || e.message
+        throw e
+      } finally {
+        this.loading = false
+      }
+    },
+
+    async deletePlan(planId: string) {
+      this.loading = true
+      this.error = null
+
+      try {
+        console.log('🗑️ Soft deleting plan:', planId)
+        const res = await axios.delete(`${BASE_URL}plans/${planId}`)
+        console.log('✅ Plan soft deleted:', res.data)
+        return res.data.data
+      } catch (e: any) {
+        this.error = e.response?.data?.message || e.message
+        console.error('❌ Failed to delete plan:', this.error)
+        throw e
+      } finally {
+        this.loading = false
+      }
+    },
+
     clearError() {
       this.error = null
-    }
-  }
+    },
+  },
 })

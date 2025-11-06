@@ -1,5 +1,4 @@
 <!-- eslint-disable @typescript-eslint/no-explicit-any -->
-<!-- eslint-disable @typescript-eslint/no-explicit-any -->
 <template>
   <div class="view-plan-container">
     <div class="view-plan-wrapper">
@@ -138,10 +137,20 @@
                 >
                   View Package
                 </button>
-                <button class="btn btn-primary" @click="$router.push(`/plans/${plan.id}/edit`)">
+                <button
+                  class="btn btn-primary"
+                  @click="$router.push(`/plans/${plan.id}/edit`)"
+                  :disabled="plan.isDeleted"
+                >
                   Edit Plan
                 </button>
-                <button class="btn btn-danger" @click="handleDeletePlan">Delete Plan</button>
+                <button
+                  class="btn btn-danger"
+                  @click="confirmDeletePlan"
+                  :disabled="plan.isDeleted"
+                >
+                  {{ plan.isDeleted ? 'Deleted' : 'Delete Plan' }}
+                </button>
               </div>
             </div>
           </div>
@@ -253,7 +262,7 @@
                             </svg>
                           </button>
                           <button
-                            @click="handleDeleteActivity(activity.id)"
+                            @click="confirmDeleteActivity(activity.id)"
                             class="btn-action btn-delete"
                             title="Remove"
                           >
@@ -303,6 +312,28 @@
         @close="showEditActivityModal = false"
         @success="handleActivityUpdated"
       />
+
+      <!-- Delete Activity Confirmation Modal -->
+      <VConfirmModal
+        :is-open="showDeleteActivityConfirm"
+        title="Remove Activity"
+        message="Are you sure you want to remove this activity from the plan?"
+        confirm-text="OK"
+        cancel-text="Cancel"
+        @confirm="handleDeleteActivity"
+        @cancel="cancelDeleteActivity"
+      />
+
+      <!-- Delete Plan Confirmation Modal -->
+      <VConfirmModal
+        :is-open="showDeletePlanConfirm"
+        title="Delete Plan"
+        message="Are you sure you want to delete this plan? This action cannot be undone."
+        confirm-text="Delete"
+        cancel-text="Cancel"
+        @confirm="handleDeletePlan"
+        @cancel="cancelDeletePlan"
+      />
     </div>
   </div>
 </template>
@@ -311,11 +342,12 @@
 import { ref, computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { usePlanStore } from '@/stores/plan'
-import { useOrderedActivityStore } from '/Users/valizanadya/Documents/SMT 5/APAP/tugas individu/tour-package-2306240156-fe/src/stores/orderedActivity.ts'
+import { useOrderedActivityStore } from '@/stores/orderedActivity'
 import { storeToRefs } from 'pinia'
 import type { PlanDetail, OrderedQuantity } from '@/interfaces/plan.interface'
-import AddActivityModal from '/Users/valizanadya/Documents/SMT 5/APAP/tugas individu/tour-package-2306240156-fe/src/components/activity/AddActivityModal.vue'
-import EditActivityModal from '/Users/valizanadya/Documents/SMT 5/APAP/tugas individu/tour-package-2306240156-fe/src/components/activity/EditActivityModal.vue'
+import AddActivityModal from '@/components/activity/AddActivityModal.vue'
+import EditActivityModal from '@/components/activity/EditActivityModal.vue'
+import VConfirmModal from '@/components/common/VConfirmModal.vue'
 
 const route = useRoute()
 const router = useRouter()
@@ -328,14 +360,16 @@ const plan = computed(() => currentPlan.value as PlanDetail | null)
 // Modal states
 const showAddActivityModal = ref(false)
 const showEditActivityModal = ref(false)
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const selectedActivity = ref<any>(null)
+const showDeleteActivityConfirm = ref(false)
+const showDeletePlanConfirm = ref(false)
+
+const selectedActivity = ref<OrderedQuantity | null>(null)
+const activityToDelete = ref<string | null>(null)
 
 // Computed properties
 const packageQuota = computed(() => {
-  // This would come from the package data
-  // You might need to fetch this or get it from the plan detail
-  return 100 // Placeholder - replace with actual package quota
+  // Get from plan detail if available (default to 100 if not present)
+  return 100
 })
 
 const currentTotalOrdered = computed(() => {
@@ -350,6 +384,12 @@ const currentTotalOrdered = computed(() => {
 onMounted(async () => {
   const planId = route.params.id as string
   await planStore.getPlanDetail(planId)
+
+  // Check if plan is deleted
+  if (plan.value?.isDeleted) {
+    alert('This plan has been deleted')
+    router.push(`/package/${plan.value.packageId}`)
+  }
 })
 
 // Methods
@@ -372,58 +412,81 @@ function statusBadgeClass(status?: string) {
 
 async function handleActivityAdded() {
   console.log('✅ Activity added successfully')
-  // Refresh plan data
   const planId = route.params.id as string
   await planStore.getPlanDetail(planId)
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-function handleEditActivity(activity: any) {
+function handleEditActivity(activity: OrderedQuantity) {
   selectedActivity.value = activity
   showEditActivityModal.value = true
 }
 
 async function handleActivityUpdated() {
   console.log('✅ Activity updated successfully')
-  // Refresh plan data
   const planId = route.params.id as string
   await planStore.getPlanDetail(planId)
 }
 
-async function handleDeleteActivity(activityId: string) {
-  if (!confirm('Are you sure you want to remove this activity from the plan?')) {
-    return
-  }
+// Delete Activity Methods
+function confirmDeleteActivity(activityId: string) {
+  activityToDelete.value = activityId
+  showDeleteActivityConfirm.value = true
+}
+
+async function handleDeleteActivity() {
+  if (!activityToDelete.value) return
 
   try {
-    await orderedActivityStore.deleteOrderedActivity(activityId)
+    await orderedActivityStore.deleteOrderedActivity(activityToDelete.value)
     console.log('✅ Activity deleted successfully')
+
+    // Close modal
+    showDeleteActivityConfirm.value = false
+    activityToDelete.value = null
 
     // Refresh plan data
     const planId = route.params.id as string
     await planStore.getPlanDetail(planId)
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  } catch (error: any) {
-    alert(error.response?.data?.message || 'Failed to delete activity')
+  } catch (error) {
+    console.error('❌ Failed to delete activity:', error)
+    const err = error as { response?: { data?: { message?: string } } }
+    alert(err.response?.data?.message || 'Failed to delete activity')
+    showDeleteActivityConfirm.value = false
   }
+}
+
+function cancelDeleteActivity() {
+  showDeleteActivityConfirm.value = false
+  activityToDelete.value = null
+}
+
+// Delete Plan Methods
+function confirmDeletePlan() {
+  showDeletePlanConfirm.value = true
 }
 
 async function handleDeletePlan() {
   if (!plan.value) return
 
-  if (!confirm('Are you sure you want to delete this plan? This action cannot be undone.')) {
-    return
-  }
-
   try {
-    // You'll need to implement deletePlan in the store
-    // await planStore.deletePlan(plan.value.id)
-    alert('Plan deleted successfully')
+    // Soft delete plan
+    await planStore.deletePlan(plan.value.id)
+
+    console.log('✅ Plan soft deleted successfully')
+    showDeletePlanConfirm.value = false
+
+    // Navigate to package detail
     router.push(`/package/${plan.value.packageId}`)
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  } catch (error: any) {
-    alert(error.response?.data?.message || 'Failed to delete plan')
+  } catch (error) {
+    console.error('❌ Failed to delete plan:', error)
+    const err = error as { response?: { data?: { message?: string } } }
+    alert(err.response?.data?.message || 'Failed to delete plan')
+    showDeletePlanConfirm.value = false
   }
+}
+
+function cancelDeletePlan() {
+  showDeletePlanConfirm.value = false
 }
 </script>
 
