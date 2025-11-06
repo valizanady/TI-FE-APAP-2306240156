@@ -24,6 +24,31 @@
         <div class="header-content">
           <h1 class="detail-title">{{ pkg?.packageName || 'Loading...' }}</h1>
           <div class="header-actions">
+            <!-- Process Package Button (only shown if eligible) -->
+            <button
+              v-if="canProcess"
+              class="btn btn-success"
+              @click="handleProcessPackage"
+              :disabled="processing"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                class="btn-icon"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                />
+              </svg>
+              <span v-if="processing">Processing...</span>
+              <span v-else>Process Package</span>
+            </button>
+
             <button
               class="btn btn-secondary"
               @click="router.push(`/package/${route.params.id}/edit`)"
@@ -259,9 +284,7 @@
             />
           </svg>
           <p class="empty-text">No plans available for this package</p>
-          <p class="empty-subtext">
-            Click "Create New Plan" button above to add your first plan
-          </p>
+          <p class="empty-subtext">Click "Create New Plan" button above to add your first plan</p>
         </div>
 
         <div v-else class="table-container">
@@ -401,23 +424,78 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import axios from 'axios'
 import type { Package } from '@/interfaces/package.interface'
 import type { CommonResponse } from '@/interfaces/common.response.interface'
 import VDeleteButton from '@/components/package/VDeleteButton.vue'
+import { usePackageStore } from '@/stores/package'
 
 const route = useRoute()
 const router = useRouter()
+const packageStore = usePackageStore()
 const pkg = ref<Package | null>(null)
+const processing = ref(false)
 const API = import.meta.env.VITE_API_BASE_URL
 
 onMounted(async () => {
-  const id = route.params.id
+  await loadPackage()
+})
+
+async function loadPackage() {
+  const id = route.params.id as string
   const res = await axios.get<CommonResponse<Package>>(`${API}package/${id}`)
   pkg.value = res.data.data
+}
+
+// Computed: Check if package can be processed
+const canProcess = computed(() => {
+  if (!pkg.value) return false
+
+  // Must be Pending or Draft status
+  const status = pkg.value.status?.toUpperCase()
+  if (status !== 'PENDING' && status !== 'DRAFT') return false
+
+  // Must have at least one plan
+  if (!pkg.value.plans || pkg.value.plans.length === 0) return false
+
+  // All plans must be Fulfilled
+  const allFulfilled = pkg.value.plans.every((plan) => plan.status === 'Fulfilled')
+
+  return allFulfilled
 })
+
+async function handleProcessPackage() {
+  if (!pkg.value) return
+
+  const confirmed = confirm(
+    'Are you sure you want to process this package?\n\n' +
+      'This will:\n' +
+      '✓ Change package status to "Processed"\n' +
+      '✓ Book all activities (reduce capacity)\n' +
+      '✓ Lock the package (no more edits allowed)\n\n' +
+      'This action cannot be undone.',
+  )
+
+  if (!confirmed) return
+
+  processing.value = true
+
+  try {
+    await packageStore.processPackage(pkg.value.id)
+
+    alert('✅ Package processed successfully!\n\nAll activities have been booked.')
+
+    // Reload package data
+    await loadPackage()
+  } catch (error) {
+    const errorMsg = error instanceof Error ? error.message : 'Failed to process package'
+    alert(`❌ Error processing package:\n\n${errorMsg}`)
+  } finally {
+    processing.value = false
+  }
+}
 
 function formatDate(dateStr?: string) {
   if (!dateStr) return '-'
@@ -534,6 +612,24 @@ function statusBadge(status?: string) {
 
 .btn-secondary:hover {
   background-color: #f9fafb;
+}
+
+.btn-success {
+  background: linear-gradient(135deg, #10b981 0%, #34d399 100%);
+  color: #ffffff;
+  border: none;
+}
+
+.btn-success:hover:not(:disabled) {
+  background: linear-gradient(135deg, #059669 0%, #10b981 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 6px -1px rgba(16, 185, 129, 0.3);
+}
+
+.btn-success:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
 }
 
 .btn-danger {

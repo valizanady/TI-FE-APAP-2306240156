@@ -137,20 +137,10 @@
                 >
                   View Package
                 </button>
-                <button
-                  class="btn btn-primary"
-                  @click="$router.push(`/plans/${plan.id}/edit`)"
-                  :disabled="plan.isDeleted"
-                >
+                <button class="btn btn-primary" @click="$router.push(`/plans/${plan.id}/edit`)">
                   Edit Plan
                 </button>
-                <button
-                  class="btn btn-danger"
-                  @click="confirmDeletePlan"
-                  :disabled="plan.isDeleted"
-                >
-                  {{ plan.isDeleted ? 'Deleted' : 'Delete Plan' }}
-                </button>
+                <button class="btn btn-danger" @click="confirmDeletePlan">Delete Plan</button>
               </div>
             </div>
           </div>
@@ -236,7 +226,12 @@
                       <td>{{ formatDateTime(activity.startDate) }}</td>
                       <td>{{ formatDateTime(activity.endDate) }}</td>
                       <td class="price-cell">Rp {{ activity.price.toLocaleString('id-ID') }}</td>
-                      <td class="quota-cell">{{ activity.quota }}</td>
+                      <td class="quota-cell">
+                        <span class="capacity-badge">{{ activity.quota }}</span>
+                        <span v-if="plan.packageStatus === 'Processed'" class="capacity-note">
+                          (Updated after processing)
+                        </span>
+                      </td>
                       <td class="quota-cell">{{ activity.orderedQuota }}</td>
                       <td class="total-cell">Rp {{ activity.total.toLocaleString('id-ID') }}</td>
                       <td v-if="plan.packageStatus === 'Pending'" class="actions-cell">
@@ -348,6 +343,9 @@ import type { PlanDetail, OrderedQuantity } from '@/interfaces/plan.interface'
 import AddActivityModal from '@/components/activity/AddActivityModal.vue'
 import EditActivityModal from '@/components/activity/EditActivityModal.vue'
 import VConfirmModal from '@/components/common/VConfirmModal.vue'
+import axios from 'axios'
+
+const BASE_URL = import.meta.env.VITE_API_BASE_URL
 
 const route = useRoute()
 const router = useRouter()
@@ -383,13 +381,14 @@ const currentTotalOrdered = computed(() => {
 // Lifecycle
 onMounted(async () => {
   const planId = route.params.id as string
+  console.log('🔄 Loading plan details for:', planId)
   await planStore.getPlanDetail(planId)
-
-  // Check if plan is deleted
-  if (plan.value?.isDeleted) {
-    alert('This plan has been deleted')
-    router.push(`/package/${plan.value.packageId}`)
-  }
+  console.log(
+    '✅ Plan loaded. Status:',
+    plan.value?.status,
+    'Package Status:',
+    plan.value?.packageStatus,
+  )
 })
 
 // Methods
@@ -469,10 +468,10 @@ async function handleDeletePlan() {
   if (!plan.value) return
 
   try {
-    // Soft delete plan
-    await planStore.deletePlan(plan.value.id)
+    // Delete plan
+    await axios.delete(`${BASE_URL}plans/${plan.value.id}`)
 
-    console.log('✅ Plan soft deleted successfully')
+    console.log('✅ Plan deleted successfully')
     showDeletePlanConfirm.value = false
 
     // Navigate to package detail
@@ -882,6 +881,25 @@ function cancelDeletePlan() {
 
 .total-cell {
   color: #15803d;
+}
+
+.capacity-badge {
+  display: inline-block;
+  padding: 0.25rem 0.5rem;
+  background-color: #dbeafe;
+  color: #1e40af;
+  border-radius: 0.25rem;
+  font-weight: 600;
+  font-size: 0.875rem;
+}
+
+.capacity-note {
+  display: block;
+  font-size: 0.625rem;
+  color: #059669;
+  font-weight: 500;
+  margin-top: 0.25rem;
+  font-style: italic;
 }
 
 /* Action Buttons in Table */

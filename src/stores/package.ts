@@ -141,5 +141,32 @@ export const usePackageStore = defineStore('package', {
         this.isLoading = false
       }
     },
+
+    // ✅ Process package
+    async processPackage(id: string) {
+      this.isLoading = true
+      this.error = ''
+
+      try {
+        console.log('⚙️ Processing package:', id)
+
+        const response = await axios.put(`${API}package/${id}/process`)
+
+        console.log('✅ Package processed successfully:', response.data)
+
+        // Refresh the list
+        await this.fetchAll()
+
+        return response.data
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      } catch (e: any) {
+        console.error('❌ Process error:', e)
+        console.error('❌ Error response:', e.response?.data)
+        this.error = e.response?.data?.message || 'Failed to process package'
+        throw new Error(this.error)
+      } finally {
+        this.isLoading = false
+      }
+    },
   },
 })

@@ -76,50 +76,29 @@ export const usePlanStore = defineStore('plan', {
       try {
         const res = await axios.get(`${BASE_URL}plans/${planId}`)
         this.currentPlan = res.data.data
-        return res.data.data
-      } catch (e: any) {
-        this.error = e.response?.data?.message || e.message
-        throw e
-      } finally {
-        this.loading = false
-      }
-    },
 
-    async getPlanForEdit(planId: string) {
-      this.loading = true
-      this.error = null
+        // Debug: Log activity capacities
+        console.log('📊 Plan Detail Retrieved:', {
+          planId: res.data.data.id,
+          packageStatus: res.data.data.packageStatus,
+          activitiesCount: res.data.data.orderedQuantities?.length,
+        })
 
-      try {
-        const res = await axios.get(`${BASE_URL}plans/${planId}`)
-        const plan = res.data.data
-
-        // Check if plan is deleted
-        if (plan.isDeleted) {
-          throw new Error('This plan has been deleted and cannot be edited')
+        if (res.data.data.orderedQuantities?.length > 0) {
+          console.log('📋 Activity Capacities:')
+          res.data.data.orderedQuantities.forEach((activity: any, index: number) => {
+            console.log(`  ${index + 1}. ${activity.activityName}:`, {
+              activityId: activity.activityId,
+              quota: activity.quota,
+              orderedQuota: activity.orderedQuota,
+              remaining: activity.quota - activity.orderedQuota,
+            })
+          })
         }
 
-        this.currentPlan = plan
-        return plan
-      } catch (e: any) {
-        this.error = e.response?.data?.message || e.message
-        throw e
-      } finally {
-        this.loading = false
-      }
-    },
-
-    async deletePlan(planId: string) {
-      this.loading = true
-      this.error = null
-
-      try {
-        console.log('🗑️ Soft deleting plan:', planId)
-        const res = await axios.delete(`${BASE_URL}plans/${planId}`)
-        console.log('✅ Plan soft deleted:', res.data)
         return res.data.data
       } catch (e: any) {
         this.error = e.response?.data?.message || e.message
-        console.error('❌ Failed to delete plan:', this.error)
         throw e
       } finally {
         this.loading = false

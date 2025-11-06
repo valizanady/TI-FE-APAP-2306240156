@@ -11,7 +11,6 @@ export interface Plan {
   endLocation: string
   price: number
   packageId: string
-  isDeleted?: boolean
 }
 
 export interface CreatePlanRequest {
@@ -68,5 +67,4 @@ export interface PlanDetail {
   packageName: string
   packageStatus: string // Remove optional, make it required
   orderedQuantities: OrderedQuantity[]
-  isDeleted?: boolean
 }
