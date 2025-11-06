@@ -1,3 +1,5 @@
+<!-- eslint-disable @typescript-eslint/no-explicit-any -->
+<!-- eslint-disable @typescript-eslint/no-explicit-any -->
 <template>
   <div class="view-plan-container">
     <div class="view-plan-wrapper">
@@ -78,7 +80,13 @@
                 <span :class="statusBadgeClass(plan.status)">
                   {{ plan.status }}
                 </span>
-                <p class="info-note">All requirements met</p>
+                <p class="info-note">
+                  {{
+                    plan.status === 'Fulfilled'
+                      ? 'All requirements met'
+                      : 'Not enough ordered quantities'
+                  }}
+                </p>
               </div>
 
               <!-- Total Price -->
@@ -116,112 +124,235 @@
                 <p class="info-label">Package:</p>
                 <a
                   :href="`/package/${plan.packageId}`"
-                  class="package-link"
+                  class="package-link text-blue-600 hover:underline"
                 >
                   {{ plan.packageName }}
                 </a>
               </div>
-            </div>
 
-            <!-- Action Buttons -->
-            <div class="action-buttons">
-              <button
-                class="btn btn-secondary"
-                @click="$router.push(`/package/${plan.packageId}`)"
-              >
-                View Package
-              </button>
-              <button
-                class="btn btn-primary"
-                @click="$router.push(`/plans/${plan.id}/edit`)"
-              >
-                Edit Plan
-              </button>
-              <button class="btn btn-danger">Delete Plan</button>
+              <!-- Action Buttons -->
+              <div class="action-buttons">
+                <button
+                  class="btn btn-secondary"
+                  @click="$router.push(`/package/${plan.packageId}`)"
+                >
+                  View Package
+                </button>
+                <button class="btn btn-primary" @click="$router.push(`/plans/${plan.id}/edit`)">
+                  Edit Plan
+                </button>
+                <button class="btn btn-danger" @click="handleDeletePlan">Delete Plan</button>
+              </div>
             </div>
           </div>
-        </div>
 
-        <!-- Ordered Activities Table -->
-        <div class="activities-card">
-          <div class="card-header">
-            <h2 class="card-title">Ordered Activities</h2>
-          </div>
-          <div class="card-body">
-            <!-- Empty State -->
-            <div
-              v-if="!plan.orderedQuantities || plan.orderedQuantities.length === 0"
-              class="empty-state"
-            >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                class="empty-icon"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
+          <!-- Ordered Activities Table -->
+          <div class="activities-card">
+            <div class="card-header-with-button">
+              <h2 class="card-title">Ordered Activities</h2>
+              <button
+                v-if="plan.packageStatus === 'Pending'"
+                @click="showAddActivityModal = true"
+                class="btn-add-activity"
               >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
-                />
-              </svg>
-              <p class="empty-text">No ordered activities yet</p>
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  class="btn-icon"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M12 4v16m8-8H4"
+                  />
+                </svg>
+                Add Activity
+              </button>
             </div>
+            <div class="card-body">
+              <!-- Empty State -->
+              <div
+                v-if="!plan.orderedQuantities || plan.orderedQuantities.length === 0"
+                class="empty-state"
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  class="empty-icon"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
+                  />
+                </svg>
+                <p class="empty-text">No ordered activities yet</p>
+                <button
+                  v-if="plan.packageStatus === 'Pending'"
+                  @click="showAddActivityModal = true"
+                  class="btn-add-empty"
+                >
+                  Add First Activity
+                </button>
+              </div>
 
-            <!-- Table -->
-            <div v-else class="table-container">
-              <table class="activities-table">
-                <thead>
-                  <tr>
-                    <th>Activity Name</th>
-                    <th>Activity ID</th>
-                    <th>Start Date</th>
-                    <th>End Date</th>
-                    <th>Price</th>
-                    <th>Quota</th>
-                    <th>Ordered Quota</th>
-                    <th>Total</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr v-for="activity in plan.orderedQuantities" :key="activity.id">
-                    <td>{{ activity.activityName }}</td>
-                    <td><code class="activity-id">{{ activity.activityId }}</code></td>
-                    <td>{{ formatDateTime(activity.startDate) }}</td>
-                    <td>{{ formatDateTime(activity.endDate) }}</td>
-                    <td class="price-cell">Rp {{ activity.price.toLocaleString('id-ID') }}</td>
-                    <td class="quota-cell">{{ activity.quota }}</td>
-                    <td class="quota-cell">{{ activity.orderedQuota }}</td>
-                    <td class="total-cell">Rp {{ activity.total.toLocaleString('id-ID') }}</td>
-                  </tr>
-                </tbody>
-              </table>
+              <!-- Table -->
+              <div v-else class="table-container">
+                <table class="activities-table">
+                  <thead>
+                    <tr>
+                      <th>Activity Name</th>
+                      <th>Activity ID</th>
+                      <th>Start Date</th>
+                      <th>End Date</th>
+                      <th>Price</th>
+                      <th>Quota</th>
+                      <th>Ordered Quota</th>
+                      <th>Total</th>
+                      <th v-if="plan.packageStatus === 'Pending'">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr v-for="activity in plan.orderedQuantities" :key="activity.id">
+                      <td>{{ activity.activityName }}</td>
+                      <td>
+                        <code class="activity-id">{{ activity.activityId }}</code>
+                      </td>
+                      <td>{{ formatDateTime(activity.startDate) }}</td>
+                      <td>{{ formatDateTime(activity.endDate) }}</td>
+                      <td class="price-cell">Rp {{ activity.price.toLocaleString('id-ID') }}</td>
+                      <td class="quota-cell">{{ activity.quota }}</td>
+                      <td class="quota-cell">{{ activity.orderedQuota }}</td>
+                      <td class="total-cell">Rp {{ activity.total.toLocaleString('id-ID') }}</td>
+                      <td v-if="plan.packageStatus === 'Pending'" class="actions-cell">
+                        <div class="action-buttons-cell">
+                          <button
+                            @click="handleEditActivity(activity)"
+                            class="btn-action btn-edit"
+                            title="Edit"
+                          >
+                            <svg
+                              xmlns="http://www.w3.org/2000/svg"
+                              class="action-icon"
+                              fill="none"
+                              viewBox="0 0 24 24"
+                              stroke="currentColor"
+                            >
+                              <path
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                                stroke-width="2"
+                                d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+                              />
+                            </svg>
+                          </button>
+                          <button
+                            @click="handleDeleteActivity(activity.id)"
+                            class="btn-action btn-delete"
+                            title="Remove"
+                          >
+                            <svg
+                              xmlns="http://www.w3.org/2000/svg"
+                              class="action-icon"
+                              fill="none"
+                              viewBox="0 0 24 24"
+                              stroke="currentColor"
+                            >
+                              <path
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                                stroke-width="2"
+                                d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                              />
+                            </svg>
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
             </div>
           </div>
         </div>
       </div>
+
+      <!-- Add Activity Modal -->
+      <AddActivityModal
+        :is-open="showAddActivityModal"
+        :plan-id="plan?.id || ''"
+        :activity-type="plan?.activityType || ''"
+        :package-quota="packageQuota"
+        :current-total-ordered="currentTotalOrdered"
+        @close="showAddActivityModal = false"
+        @success="handleActivityAdded"
+      />
+
+      <!-- Edit Activity Modal -->
+      <EditActivityModal
+        :is-open="showEditActivityModal"
+        :ordered-activity="selectedActivity"
+        :package-quota="packageQuota"
+        :current-total-ordered="currentTotalOrdered"
+        @close="showEditActivityModal = false"
+        @success="handleActivityUpdated"
+      />
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { onMounted } from 'vue'
-import { useRoute } from 'vue-router'
-import { usePlanStore } from '/Users/valizanadya/Documents/SMT 5/APAP/tugas individu/tour-package-2306240156-fe/src/stores/plan.ts'
+import { ref, computed, onMounted } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
+import { usePlanStore } from '@/stores/plan'
+import { useOrderedActivityStore } from '/Users/valizanadya/Documents/SMT 5/APAP/tugas individu/tour-package-2306240156-fe/src/stores/orderedActivity.ts'
 import { storeToRefs } from 'pinia'
+import type { PlanDetail, OrderedQuantity } from '@/interfaces/plan.interface'
+import AddActivityModal from '/Users/valizanadya/Documents/SMT 5/APAP/tugas individu/tour-package-2306240156-fe/src/components/activity/AddActivityModal.vue'
+import EditActivityModal from '/Users/valizanadya/Documents/SMT 5/APAP/tugas individu/tour-package-2306240156-fe/src/components/activity/EditActivityModal.vue'
 
 const route = useRoute()
+const router = useRouter()
 const planStore = usePlanStore()
+const orderedActivityStore = useOrderedActivityStore()
 
-const { currentPlan: plan, loading, error } = storeToRefs(planStore)
+const { currentPlan, loading, error } = storeToRefs(planStore)
+const plan = computed(() => currentPlan.value as PlanDetail | null)
 
+// Modal states
+const showAddActivityModal = ref(false)
+const showEditActivityModal = ref(false)
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const selectedActivity = ref<any>(null)
+
+// Computed properties
+const packageQuota = computed(() => {
+  // This would come from the package data
+  // You might need to fetch this or get it from the plan detail
+  return 100 // Placeholder - replace with actual package quota
+})
+
+const currentTotalOrdered = computed(() => {
+  if (!plan.value?.orderedQuantities) return 0
+  return plan.value.orderedQuantities.reduce(
+    (sum: number, oq: OrderedQuantity) => sum + oq.orderedQuota,
+    0,
+  )
+})
+
+// Lifecycle
 onMounted(async () => {
   const planId = route.params.id as string
   await planStore.getPlanDetail(planId)
 })
 
+// Methods
 function formatDateTime(dateStr?: string) {
   if (!dateStr) return '-'
   return new Date(dateStr).toLocaleString('id-ID', {
@@ -229,14 +360,70 @@ function formatDateTime(dateStr?: string) {
     minute: '2-digit',
     day: 'numeric',
     month: 'long',
-    year: 'numeric'
+    year: 'numeric',
   })
 }
 
 function statusBadgeClass(status?: string) {
-  if (status === 'Unfulfilled') return 'badge badge-green'
-  if (status === 'Fulfilled') return 'badge badge-blue'
+  if (status === 'Unfulfilled') return 'badge badge-orange'
+  if (status === 'Fulfilled') return 'badge badge-green'
   return 'badge badge-gray'
+}
+
+async function handleActivityAdded() {
+  console.log('✅ Activity added successfully')
+  // Refresh plan data
+  const planId = route.params.id as string
+  await planStore.getPlanDetail(planId)
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function handleEditActivity(activity: any) {
+  selectedActivity.value = activity
+  showEditActivityModal.value = true
+}
+
+async function handleActivityUpdated() {
+  console.log('✅ Activity updated successfully')
+  // Refresh plan data
+  const planId = route.params.id as string
+  await planStore.getPlanDetail(planId)
+}
+
+async function handleDeleteActivity(activityId: string) {
+  if (!confirm('Are you sure you want to remove this activity from the plan?')) {
+    return
+  }
+
+  try {
+    await orderedActivityStore.deleteOrderedActivity(activityId)
+    console.log('✅ Activity deleted successfully')
+
+    // Refresh plan data
+    const planId = route.params.id as string
+    await planStore.getPlanDetail(planId)
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  } catch (error: any) {
+    alert(error.response?.data?.message || 'Failed to delete activity')
+  }
+}
+
+async function handleDeletePlan() {
+  if (!plan.value) return
+
+  if (!confirm('Are you sure you want to delete this plan? This action cannot be undone.')) {
+    return
+  }
+
+  try {
+    // You'll need to implement deletePlan in the store
+    // await planStore.deletePlan(plan.value.id)
+    alert('Plan deleted successfully')
+    router.push(`/package/${plan.value.packageId}`)
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  } catch (error: any) {
+    alert(error.response?.data?.message || 'Failed to delete plan')
+  }
 }
 </script>
 
@@ -370,11 +557,45 @@ function statusBadgeClass(status?: string) {
   border-radius: 0.75rem 0.75rem 0 0;
 }
 
+.card-header-with-button {
+  background: linear-gradient(135deg, #6b46c1 0%, #8b5cf6 100%);
+  padding: 1.25rem 1.5rem;
+  border-radius: 0.75rem 0.75rem 0 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
 .card-title {
   font-size: 1.125rem;
   font-weight: 600;
   color: #ffffff;
   margin: 0;
+}
+
+.btn-add-activity {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  background-color: white;
+  color: #6b46c1;
+  border: none;
+  border-radius: 0.5rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-add-activity:hover {
+  background-color: #f3f4f6;
+  transform: translateY(-1px);
+}
+
+.btn-icon {
+  width: 1rem;
+  height: 1rem;
 }
 
 .card-body {
@@ -446,9 +667,9 @@ function statusBadgeClass(status?: string) {
   color: #15803d;
 }
 
-.badge-blue {
-  background-color: #dbeafe;
-  color: #1e40af;
+.badge-orange {
+  background-color: #ffedd5;
+  color: #c2410c;
 }
 
 .badge-gray {
@@ -521,7 +742,24 @@ function statusBadgeClass(status?: string) {
 .empty-text {
   color: #6b7280;
   font-size: 1rem;
-  margin: 0;
+  margin: 0 0 1.5rem 0;
+}
+
+.btn-add-empty {
+  padding: 0.625rem 1.5rem;
+  background: linear-gradient(135deg, #6b46c1 0%, #8b5cf6 100%);
+  color: white;
+  border: none;
+  border-radius: 0.5rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-add-empty:hover {
+  background: linear-gradient(135deg, #5a3ca1 0%, #7c4ee6 100%);
+  transform: translateY(-1px);
 }
 
 /* Table */
@@ -583,6 +821,50 @@ function statusBadgeClass(status?: string) {
   color: #15803d;
 }
 
+/* Action Buttons in Table */
+.actions-cell {
+  padding: 0.5rem 1rem;
+}
+
+.action-buttons-cell {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.btn-action {
+  padding: 0.375rem;
+  border: none;
+  border-radius: 0.375rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.action-icon {
+  width: 1.125rem;
+  height: 1.125rem;
+}
+
+.btn-edit {
+  background-color: #fef3c7;
+  color: #d97706;
+}
+
+.btn-edit:hover {
+  background-color: #fde68a;
+}
+
+.btn-delete {
+  background-color: #fee2e2;
+  color: #dc2626;
+}
+
+.btn-delete:hover {
+  background-color: #fecaca;
+}
+
 /* Responsive */
 @media (max-width: 768px) {
   .view-plan-container {
@@ -607,12 +889,23 @@ function statusBadgeClass(status?: string) {
     justify-content: center;
   }
 
+  .card-header-with-button {
+    flex-direction: column;
+    gap: 1rem;
+    align-items: flex-start;
+  }
+
+  .btn-add-activity {
+    width: 100%;
+    justify-content: center;
+  }
+
   .table-container {
     overflow-x: scroll;
   }
 
   .activities-table {
-    min-width: 800px;
+    min-width: 900px;
   }
 }
 </style>

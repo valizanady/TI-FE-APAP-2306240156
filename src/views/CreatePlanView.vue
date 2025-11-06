@@ -207,6 +207,7 @@ import { useRoute, useRouter } from 'vue-router'
 import axios from 'axios'
 import type { CommonResponse } from '@/interfaces/common.response.interface'
 import type { Package } from '@/interfaces/package.interface'
+import { toLocalDateTimeString, toDateTimeLocalFormat } from '/Users/valizanadya/Documents/SMT 5/APAP/tugas individu/tour-package-2306240156-fe/src/assets/utils/dateTimeHelper.ts'
 
 const route = useRoute()
 const router = useRouter()
@@ -378,26 +379,26 @@ function validateForm(): boolean {
     return false
   }
 
-  // Date validations
-  const planStartDate = new Date(form.value.startDate)
-  const planEndDate = new Date(form.value.endDate)
-  const packageStartDate = new Date(pkg.value!.startDate)
-  const packageEndDate = new Date(pkg.value!.endDate)
+  // Date validations - parse as local datetime (no timezone conversion)
+  const planStart = form.value.startDate // "2025-11-01T00:00"
+  const planEnd = form.value.endDate
+  const pkgStart = toDateTimeLocalFormat(pkg.value!.startDate)
+  const pkgEnd = toDateTimeLocalFormat(pkg.value!.endDate)
 
   // EndDate tidak boleh lebih dahulu daripada StartDate
-  if (planEndDate < planStartDate) {
+  if (planEnd < planStart) {
     error.value = 'End Date cannot be earlier than Start Date'
     return false
   }
 
   // StartDate tidak boleh lebih dahulu daripada startDate Package
-  if (planStartDate < packageStartDate) {
+  if (planStart < pkgStart) {
     error.value = `Plan Start Date must be on or after Package Start Date (${formatDate(pkg.value!.startDate)})`
     return false
   }
 
   // EndDate tidak boleh setelah EndDate Package
-  if (planEndDate > packageEndDate) {
+  if (planEnd > pkgEnd) {
     error.value = `Plan End Date must be on or before Package End Date (${formatDate(pkg.value!.endDate)})`
     return false
   }
@@ -419,15 +420,19 @@ async function handleSubmit() {
   }
 
   try {
-    // Convert dates to ISO string format
+    console.log('📅 Form data BEFORE conversion:', form.value)
+
+    // IMPORTANT: Convert datetime-local format to backend format (no timezone!)
     const payload = {
       planName: form.value.planName.trim(),
       activityType: form.value.activityType,
-      startDate: new Date(form.value.startDate).toISOString(),
-      endDate: new Date(form.value.endDate).toISOString(),
+      startDate: toLocalDateTimeString(form.value.startDate), // "2025-11-01T00:00" → "2025-11-01T00:00:00"
+      endDate: toLocalDateTimeString(form.value.endDate),
       startLocation: form.value.startLocation,
       endLocation: form.value.endLocation,
     }
+
+    console.log('📤 Payload AFTER conversion:', payload)
 
     await axios.post(`${API}package/${route.params.id}/plans/create`, payload)
     alert('✅ Plan created successfully!')
