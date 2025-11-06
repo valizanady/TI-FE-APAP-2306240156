@@ -6,6 +6,7 @@ import CreatePackageView from '/Users/valizanadya/Documents/SMT 5/APAP/tugas ind
 import EditPackageView from '@/views/EditPackageView.vue'
 import CreatePlanView from '@/views/CreatePlanView.vue'
 import ViewPlanView from '@/views/ViewPlanView.vue'
+import StatisticsView from '@/views/StatisticsView.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -62,11 +63,21 @@ const router = createRouter({
       name: 'activities',
       component: () => import('../views/AboutView.vue'), // temporary placeholder
     },
+
+     {
+      path: '/statistics',
+      name: 'statistics',
+      component: StatisticsView,
+      meta: {
+        title: 'Statistics - Tour Package Management',
+      },
+    },
     {
       path: '/reports',
       name: 'reports',
       component: () => import('../views/AboutView.vue'), // temporary placeholder
     },
+
   ],
 })
 

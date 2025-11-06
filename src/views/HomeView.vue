@@ -23,8 +23,8 @@
 <script setup lang="ts">
 const cards = [
   { title: 'Activities', description: 'Create and manage tour activities', route: '/activities', button: 'Manage Activities' },
-  { title: 'Packages', description: 'Create tour packages and organize them with plans', route: '/packages', button: 'Manage Packages' },
-  { title: 'Reports', description: 'View reports and analytics', route: '/reports', button: 'Manage Reports' },
+  { title: 'Packages', description: 'Create tour packages and organize them with plans', route: '/package', button: 'Manage Packages' },
+  { title: 'Reports', description: 'View reports and analytics', route: '/statistics', button: 'Manage Reports' },
 ]
 </script>
 

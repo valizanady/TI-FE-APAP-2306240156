@@ -33,7 +33,7 @@ const route = useRoute()
           Packages
         </RouterLink>
         <RouterLink
-          to="/reports"
+          to="/statistics"
           class="nav-link"
           :class="{ active: route.name === 'reports' }"
         >
