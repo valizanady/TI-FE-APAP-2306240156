@@ -21,7 +21,7 @@ export class OrderedActivityService {
     try {
       const res = await axios.get(url)
       console.log('✅ Eligible activities retrieved:', res.data)
-      return res.data.data
+      return res.data.activities // Changed to access activities property
     } catch (error: any) {
       console.error('❌ Failed to fetch activities:', error)
       throw error
@@ -35,7 +35,7 @@ export class OrderedActivityService {
     planId: string,
     data: CreateOrderedActivityRequest
   ): Promise<OrderedActivity> {
-    const url = `${BASE_URL}ordered-activities/create?planId=${planId}`
+    const url = `${BASE_URL}ordered-activities/create?planId=${planId}` // Restore /create
     console.log('🔗 Request URL:', url)
     console.log('📦 Request Data:', JSON.stringify(data, null, 2))
 
@@ -46,7 +46,7 @@ export class OrderedActivityService {
         }
       })
       console.log('✅ Response:', res.data)
-      return res.data.data
+      return res.data
     } catch (error: any) {
       console.error('❌ Request failed:', {
         url,

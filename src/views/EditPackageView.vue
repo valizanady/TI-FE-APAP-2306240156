@@ -115,10 +115,11 @@ onMounted(async () => {
     console.log('📊 Package status:', pkg.value.status)
     console.log('📋 Number of plans:', pkg.value.plans?.length || 0)
 
-    // Format dates for datetime-local input
+    // Format dates for datetime-local input (preserve date without timezone conversion)
     const formatForInput = (dateStr: string) => {
-      const date = new Date(dateStr)
-      return date.toISOString().slice(0, 16)
+      // Extract just the date part (YYYY-MM-DD) and add time as 00:00
+      const dateOnly = dateStr.split('T')[0]
+      return `${dateOnly}T00:00`
     }
 
     Object.assign(form, {
@@ -147,11 +148,11 @@ async function onUpdate() {
   if (!pkg.value) return
 
   try {
-    // Convert datetime-local format to ISO string
+    // Convert datetime-local format to ISO string (preserve date without timezone shift)
     const payload = {
       packageName: form.packageName,
-      startDate: new Date(form.startDate).toISOString(),
-      endDate: new Date(form.endDate).toISOString(),
+      startDate: form.startDate ? `${form.startDate.split('T')[0]}T00:00:00Z` : '',
+      endDate: form.endDate ? `${form.endDate.split('T')[0]}T00:00:00Z` : '',
       quota: form.quota,
     }
 

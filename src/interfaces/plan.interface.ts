@@ -50,6 +50,7 @@ export interface OrderedQuantity {
   price: number
   quota: number
   orderedQuota: number
+  remaining?: number // Add remaining field
   total: number
 }
 

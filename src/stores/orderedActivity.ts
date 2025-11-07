@@ -24,9 +24,14 @@ export const useOrderedActivityStore = defineStore('orderedActivity', {
       this.error = null
 
       try {
-        this.eligibleActivities = await service.getEligibleActivities(planId)
+        const activities = await service.getEligibleActivities(planId)
+        console.log('🔍 Raw activities from service:', activities)
+        console.log('🔍 Type of activities:', typeof activities)
+        console.log('🔍 Is array?', Array.isArray(activities))
+        this.eligibleActivities = Array.isArray(activities) ? activities : []
         console.log('✅ Fetched eligible activities:', this.eligibleActivities.length)
       } catch (e: any) {
+        this.eligibleActivities = []
         this.error = e.response?.data?.message || e.message || 'Failed to fetch activities'
         console.error('❌ Store error:', this.error)
       } finally {

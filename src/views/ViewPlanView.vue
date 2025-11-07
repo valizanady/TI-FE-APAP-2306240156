@@ -227,9 +227,11 @@
                       <td>{{ formatDateTime(activity.endDate) }}</td>
                       <td class="price-cell">Rp {{ activity.price.toLocaleString('id-ID') }}</td>
                       <td class="quota-cell">
-                        <span class="capacity-badge">{{ activity.quota }}</span>
+                        <span class="capacity-badge">
+                          {{ plan.packageStatus === 'Processed' ? activity.remaining ?? activity.quota : activity.quota }}
+                        </span>
                         <span v-if="plan.packageStatus === 'Processed'" class="capacity-note">
-                          (Updated after processing)
+                          (Remaining after processing)
                         </span>
                       </td>
                       <td class="quota-cell">{{ activity.orderedQuota }}</td>

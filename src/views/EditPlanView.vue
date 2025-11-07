@@ -405,21 +405,28 @@ const cannotEditReason = computed(() => {
   return ''
 })
 
+// API base URL
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL
+
 // Fetch provinces
 async function fetchProvinces() {
   isLoadingLocations.value = true
   try {
-    const response = await axios.get<Array<{ id: string; name: string }>>(
-      'https://www.emsifa.com/api-wilayah-indonesia/api/provinces.json',
+    const response = await axios.get<{ data: Array<{ code: string; name: string }> }>(
+      `${API_BASE_URL}location/provinces`
     )
-    provinces.value = response.data.map((p) => ({
-      code: p.id,
-      name: p.name,
-    }))
+    provinces.value = response.data.data
     console.log('✅ Provinces loaded:', provinces.value.length)
   } catch (error) {
     console.error('❌ Failed to load provinces:', error)
-    submitError.value = 'Failed to load location data'
+    // Fallback to some provinces if API fails
+    provinces.value = [
+      { code: '31', name: 'DKI Jakarta' },
+      { code: '32', name: 'Jawa Barat' },
+      { code: '33', name: 'Jawa Tengah' },
+      { code: '35', name: 'Jawa Timur' },
+      { code: '51', name: 'Bali' },
+    ]
   } finally {
     isLoadingLocations.value = false
   }
@@ -434,17 +441,14 @@ async function fetchStartRegencies(provinceCode: string) {
 
   isLoadingStartRegencies.value = true
   try {
-    const response = await axios.get<Array<{ id: string; name: string }>>(
-      `https://www.emsifa.com/api-wilayah-indonesia/api/regencies/${provinceCode}.json`,
+    const response = await axios.get<{ data: Array<{ code: string; name: string; province_code: string }> }>(
+      `${API_BASE_URL}location/regencies/${provinceCode}`
     )
-    startRegencies.value = response.data.map((r) => ({
-      code: r.id,
-      name: r.name,
-      province_code: provinceCode,
-    }))
+    startRegencies.value = response.data.data
     console.log('✅ Start regencies loaded:', startRegencies.value.length)
   } catch (error) {
     console.error('❌ Failed to load start regencies:', error)
+    startRegencies.value = []
   } finally {
     isLoadingStartRegencies.value = false
   }
@@ -459,17 +463,14 @@ async function fetchEndRegencies(provinceCode: string) {
 
   isLoadingEndRegencies.value = true
   try {
-    const response = await axios.get<Array<{ id: string; name: string }>>(
-      `https://www.emsifa.com/api-wilayah-indonesia/api/regencies/${provinceCode}.json`,
+    const response = await axios.get<{ data: Array<{ code: string; name: string; province_code: string }> }>(
+      `${API_BASE_URL}location/regencies/${provinceCode}`
     )
-    endRegencies.value = response.data.map((r) => ({
-      code: r.id,
-      name: r.name,
-      province_code: provinceCode,
-    }))
+    endRegencies.value = response.data.data
     console.log('✅ End regencies loaded:', endRegencies.value.length)
   } catch (error) {
     console.error('❌ Failed to load end regencies:', error)
+    endRegencies.value = []
   } finally {
     isLoadingEndRegencies.value = false
   }
