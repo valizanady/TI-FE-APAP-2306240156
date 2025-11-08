@@ -5,7 +5,7 @@ import axios from 'axios'
 import type {
   Activity,
   OrderedActivity,
-  CreateOrderedActivityRequest
+  CreateOrderedActivityRequest,
 } from '@/interfaces/activity.interface'
 
 const BASE_URL = import.meta.env.VITE_API_BASE_URL
@@ -21,7 +21,7 @@ export class OrderedActivityService {
     try {
       const res = await axios.get(url)
       console.log('✅ Eligible activities retrieved:', res.data)
-      return res.data.activities // Changed to access activities property
+      return res.data.activities || []
     } catch (error: any) {
       console.error('❌ Failed to fetch activities:', error)
       throw error
@@ -33,26 +33,26 @@ export class OrderedActivityService {
    */
   async addActivityToPlan(
     planId: string,
-    data: CreateOrderedActivityRequest
+    data: CreateOrderedActivityRequest,
   ): Promise<OrderedActivity> {
-    const url = `${BASE_URL}ordered-activities/create?planId=${planId}` // Restore /create
+    const url = `${BASE_URL}ordered-activities/create?planId=${planId}`
     console.log('🔗 Request URL:', url)
     console.log('📦 Request Data:', JSON.stringify(data, null, 2))
 
     try {
       const res = await axios.post(url, data, {
         headers: {
-          'Content-Type': 'application/json'
-        }
+          'Content-Type': 'application/json',
+        },
       })
       console.log('✅ Response:', res.data)
-      return res.data
+      return res.data.data
     } catch (error: any) {
       console.error('❌ Request failed:', {
         url,
         status: error.response?.status,
         data: error.response?.data,
-        message: error.message
+        message: error.message,
       })
       throw error
     }
@@ -63,7 +63,7 @@ export class OrderedActivityService {
    */
   async updateOrderedActivity(
     orderedActivityId: string,
-    quantity: number
+    quantity: number,
   ): Promise<OrderedActivity> {
     const url = `${BASE_URL}ordered-activities/${orderedActivityId}?quantity=${quantity}`
     console.log('🔗 Updating ordered activity:', url)
