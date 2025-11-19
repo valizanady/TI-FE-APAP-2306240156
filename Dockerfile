@@ -5,16 +5,16 @@ WORKDIR /app
 
 COPY package*.json ./
 
-# Hanya 1 BE
-ARG VITE_API_URL
-ENV VITE_API_URL=$VITE_API_URL
+# Build argument untuk API URL
+ARG VITE_API_BASE_URL
+ENV VITE_API_BASE_URL=$VITE_API_BASE_URL
 
 RUN npm ci
 
 COPY . .
 
-# Generate .env.production file
-RUN echo "VITE_API_URL=$VITE_API_URL" > .env.production
+# Verify environment variable
+RUN echo "Building with VITE_API_BASE_URL=$VITE_API_BASE_URL"
 
 RUN npm run build
 
@@ -24,7 +24,6 @@ FROM nginx:alpine AS production-stage
 RUN rm -rf /usr/share/nginx/html/*
 
 COPY --from=build-stage /app/dist /usr/share/nginx/html
-COPY --from=build-stage /app/.env.production /usr/share/nginx/html/.env.production
 
 COPY nginx.conf /etc/nginx/conf.d/default.conf
 
