@@ -2,7 +2,7 @@ import { createRouter, createWebHistory } from 'vue-router'
 import HomeView from '../views/HomeView.vue'
 import PackageView from '@/views/PackageView.vue'
 import PackageDetailView from '@/views/PackageDetailView.vue'
-import CreatePackageView from '/Users/valizanadya/Documents/SMT 5/APAP/tugas individu/tour-package-2306240156-fe/src/views/CreatePackageView.vue'
+import CreatePackageView from "@/views/CreatePackageView.vue";
 import EditPackageView from '@/views/EditPackageView.vue'
 import CreatePlanView from '@/views/CreatePlanView.vue'
 import ViewPlanView from '@/views/ViewPlanView.vue'
