@@ -1,0 +1,28 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: tourpackage-fe
+  labels:
+    app: tourpackage-fe
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: tourpackage-fe
+  template:
+    metadata:
+      labels:
+        app: tourpackage-fe
+    spec:
+      containers:
+        - name: tourpackage-fe
+          image: valizanadya/tourpackage-fe:REPLACE_ME_TAG
+          ports:
+            - containerPort: 80
+          resources:
+            requests:
+              cpu: 50m
+              memory: 64Mi
+            limits:
+              cpu: 200m
+              memory: 128Mi
