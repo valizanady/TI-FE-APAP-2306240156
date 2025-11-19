@@ -207,7 +207,7 @@ import { useRoute, useRouter } from 'vue-router'
 import axios from 'axios'
 import type { CommonResponse } from '@/interfaces/common.response.interface'
 import type { Package } from '@/interfaces/package.interface'
-import { toLocalDateTimeString, toDateTimeLocalFormat } from '/Users/valizanadya/Documents/SMT 5/APAP/tugas individu/tour-package-2306240156-fe/src/assets/utils/dateTimeHelper.ts'
+import { toLocalDateTimeString, toDateTimeLocalFormat } from '@/assets/utils/dateTimeHelper.ts'
 
 const route = useRoute()
 const router = useRouter()

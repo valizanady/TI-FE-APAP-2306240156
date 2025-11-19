@@ -163,7 +163,7 @@
 import { ref, computed, onMounted, h } from 'vue'
 import { useRouter } from 'vue-router'
 import { usePackageStore } from '@/stores/package'
-import VDataTable from '/Users/valizanadya/Documents/SMT 5/APAP/tugas individu/tour-package-2306240156-fe/src/components/common/VDataTable.vue'
+import VDataTable from '@/components/common/VDataTable.vue'
 import VButton from '@/components/common/VButton.vue'
 import VDeleteButton from '@/components/package/VDeleteButton.vue'
 import type { ColumnDef } from '@tanstack/vue-table'

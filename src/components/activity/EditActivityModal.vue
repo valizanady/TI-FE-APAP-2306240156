@@ -156,7 +156,7 @@
 
 <script setup lang="ts">
 import { ref, watch } from 'vue'
-import { useOrderedActivityStore } from '/Users/valizanadya/Documents/SMT 5/APAP/tugas individu/tour-package-2306240156-fe/src/stores/orderedActivity.ts'
+import { useOrderedActivityStore } from '@/stores/orderedActivity.ts'
 
 // Props
 const props = defineProps<{

@@ -180,7 +180,7 @@
 
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue'
-import { useOrderedActivityStore } from '/Users/valizanadya/Documents/SMT 5/APAP/tugas individu/tour-package-2306240156-fe/src/stores/orderedActivity.ts'
+import { useOrderedActivityStore } from '@/stores/orderedActivity.ts'
 import { storeToRefs } from 'pinia'
 import type { Activity } from '@/interfaces/activity.interface'
 

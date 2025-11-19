@@ -2,7 +2,7 @@
 import { defineStore } from 'pinia'
 import axios from 'axios'
 import type { Plan, CreatePlanRequest, UpdatePlanRequest } from '@/interfaces/plan.interface'
-import { toLocalDateTimeString } from '/Users/valizanadya/Documents/SMT 5/APAP/tugas individu/tour-package-2306240156-fe/src/assets/utils/dateTimeHelper.ts'
+import { toLocalDateTimeString } from '@/assets/utils/dateTimeHelper.ts'
 
 const BASE_URL = import.meta.env.VITE_API_BASE_URL
 

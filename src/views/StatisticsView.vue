@@ -140,7 +140,7 @@
 
 <script setup lang="ts">
 import { ref, computed, watch, onMounted, nextTick } from 'vue'
-import { useStatisticsStore } from '/Users/valizanadya/Documents/SMT 5/APAP/tugas individu/tour-package-2306240156-fe/src/stores/statistics.ts'
+import { useStatisticsStore } from '@/stores/statistics.ts'
 import { storeToRefs } from 'pinia'
 import { Chart, registerables } from 'chart.js'
 
