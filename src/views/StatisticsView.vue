@@ -178,6 +178,7 @@ const months = [
   'December',
 ]
 
+
 // Methods
 async function handleShowStatistics() {
   await statisticsStore.fetchStatistics(selectedYear.value, selectedMonth.value)
