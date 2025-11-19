@@ -22,7 +22,7 @@ build:
       - k8s/ingress.yaml
     expire_in: 1 hour
   only:
-    - feat/praktikum-9
+    - master
 
 docker-push:
   stage: docker-push
@@ -36,7 +36,7 @@ docker-push:
     - docker build --build-arg VITE_API_URL=$VITE_API_URL -t $DOCKER_IMAGE_NAME:$IMAGE_TAG .
     - docker push $DOCKER_IMAGE_NAME:$IMAGE_TAG
   only:
-    - feat/praktikum-9
+    - master
 
 deploy:
   stage: deploy
@@ -69,4 +69,4 @@ deploy:
     - ssh $EC2_USER@$EC2_HOST "sudo k3s kubectl rollout status deployment/tourpackage-fe -n default"
 
   only:
-    - feat/praktikum-9
+    - master
