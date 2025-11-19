@@ -17,6 +17,7 @@ spec:
       containers:
         - name: tourpackage-fe
           image: valizanadya/tourpackage-fe:REPLACE_ME_TAG
+          imagePullPolicy: Always
           ports:
             - containerPort: 80
           resources:
