@@ -8,9 +8,10 @@ on:
 env:
   DOCKER_IMAGE_NAME: ${{ secrets.DOCKER_IMAGE_NAME }}
   IMAGE_TAG: ${{ github.sha }}
+  # 🔥 HARDCODED - Langsung pakai URL backend
+  VITE_API_BASE_URL: http://2306240156-be.hafizmuh.site
 
 jobs:
-
   build:
     runs-on: ubuntu-latest
 
@@ -26,8 +27,13 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Build Vue app
-        run: npm run build
+      - name: Build Vue app with ENV
+        env:
+          VITE_API_BASE_URL: ${{ env.VITE_API_BASE_URL }}
+        run: |
+          echo "🔧 Building with VITE_API_BASE_URL=$VITE_API_BASE_URL"
+          npm run build
+          echo "✅ Build completed"
 
       - name: Upload dist as artifact
         uses: actions/upload-artifact@v4
@@ -35,7 +41,6 @@ jobs:
           name: dist-files
           path: dist/
           retention-days: 1
-
 
   docker-push:
     runs-on: ubuntu-latest
@@ -53,14 +58,30 @@ jobs:
       - name: Login to Docker Hub
         run: echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
 
+      - name: Debug - Check ENV
+        run: |
+          echo "========================================="
+          echo "🔍 Environment Variables Check:"
+          echo "VITE_API_BASE_URL = ${{ env.VITE_API_BASE_URL }}"
+          echo "DOCKER_IMAGE_NAME = $DOCKER_IMAGE_NAME"
+          echo "IMAGE_TAG = $IMAGE_TAG"
+          echo "========================================="
+
       - name: Build Docker image
         run: |
           docker build \
-            --build-arg VITE_API_BASE_URL=${{ secrets.VITE_API_BASE_URL }} \
-            -t $DOCKER_IMAGE_NAME:$IMAGE_TAG .
+            --build-arg VITE_API_BASE_URL="${{ env.VITE_API_BASE_URL }}" \
+            --progress=plain \
+            -t $DOCKER_IMAGE_NAME:$IMAGE_TAG \
+            -t $DOCKER_IMAGE_NAME:latest .
+          echo "✅ Docker image built successfully"
 
-      - name: Push Docker image
-        run: docker push $DOCKER_IMAGE_NAME:$IMAGE_TAG
+      - name: Push Docker images
+        run: |
+          docker push $DOCKER_IMAGE_NAME:$IMAGE_TAG
+          docker push $DOCKER_IMAGE_NAME:latest
+          echo "✅ Pushed: $DOCKER_IMAGE_NAME:$IMAGE_TAG"
+          echo "✅ Pushed: $DOCKER_IMAGE_NAME:latest"
 
   deploy:
     runs-on: ubuntu-latest
