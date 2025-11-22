@@ -2,7 +2,7 @@ import { createRouter, createWebHistory } from 'vue-router'
 import HomeView from '../views/HomeView.vue'
 import PackageView from '@/views/PackageView.vue'
 import PackageDetailView from '@/views/PackageDetailView.vue'
-import CreatePackageView from "@/views/CreatePackageView.vue";
+import CreatePackageView from '@/views/CreatePackageView.vue'
 import EditPackageView from '@/views/EditPackageView.vue'
 import CreatePlanView from '@/views/CreatePlanView.vue'
 import ViewPlanView from '@/views/ViewPlanView.vue'
@@ -21,40 +21,38 @@ const router = createRouter({
       name: 'package',
       component: PackageView,
     },
-
+    // ⚠️ IMPORTANT: Static routes MUST come BEFORE dynamic routes
+    {
+      path: '/package/create',
+      name: 'package-create',
+      component: CreatePackageView,
+    },
     {
       path: '/package/:id',
       name: 'PackageDetail',
       component: PackageDetailView,
     },
     {
-      path: '/package/create',
-      name: 'package-create',
-      component: CreatePackageView,
-    },
-
-    {
       path: '/package/:id/edit',
       name: 'EditPackage',
       component: EditPackageView,
     },
-
     {
-    path: '/package/:id/plans/create',
-    name: 'create-plan',
-    component: CreatePlanView,
+      path: '/package/:id/plans/create',
+      name: 'create-plan',
+      component: CreatePlanView,
     },
 
-      {
+    {
       path: '/plans/:id',
       name: 'view-plan',
-      component: ViewPlanView
+      component: ViewPlanView,
     },
 
     {
       path: '/plans/:id/edit',
       name: 'EditPlan',
-      component: () => import('@/views/EditPlanView.vue')
+      component: () => import('@/views/EditPlanView.vue'),
     },
 
     // Placeholder routes (will be implemented later)
@@ -64,7 +62,7 @@ const router = createRouter({
       component: () => import('../views/AboutView.vue'), // temporary placeholder
     },
 
-     {
+    {
       path: '/statistics',
       name: 'statistics',
       component: StatisticsView,
@@ -77,7 +75,6 @@ const router = createRouter({
       name: 'reports',
       component: () => import('../views/AboutView.vue'), // temporary placeholder
     },
-
   ],
 })
 
