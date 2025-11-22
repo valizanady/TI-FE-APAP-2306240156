@@ -3,34 +3,20 @@ FROM node:20 AS build-stage
 
 WORKDIR /app
 
-# Copy package files first for better caching
 COPY package*.json ./
-RUN npm ci
 
-# Copy source code
-COPY . .
-
-# ⚠️ IMPORTANT: ARG must be declared BEFORE usage and AFTER COPY
-# This ensures Vite can read the variable during build
+# Build argument untuk API URL
 ARG VITE_API_BASE_URL
 ENV VITE_API_BASE_URL=$VITE_API_BASE_URL
 
-# Verify environment variable (for debugging)
-RUN echo "========================================" && \
-    echo "🔧 Build Configuration:" && \
-    echo "VITE_API_BASE_URL = $VITE_API_BASE_URL" && \
-    echo "========================================" && \
-    if [ -z "$VITE_API_BASE_URL" ]; then \
-      echo "❌ ERROR: VITE_API_BASE_URL is not set!" && \
-      exit 1; \
-    fi
+RUN npm ci
 
-# Build the app
+COPY . .
+
+# Verify environment variable
+RUN echo "Building with VITE_API_BASE_URL=$VITE_API_BASE_URL"
+
 RUN npm run build
-
-# Verify build output
-RUN ls -lah /app/dist && \
-    echo "✅ Build completed successfully"
 
 # Production stage
 FROM nginx:alpine AS production-stage
