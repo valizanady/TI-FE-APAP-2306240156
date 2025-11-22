@@ -9,7 +9,7 @@ env:
   DOCKER_IMAGE_NAME: ${{ secrets.DOCKER_IMAGE_NAME }}
   IMAGE_TAG: ${{ github.sha }}
   # 🔥 HARDCODED - Langsung pakai URL backend
-  VITE_API_BASE_URL: http://2306240156-be.hafizmuh.site
+  VITE_API_BASE_URL: http://2306240156-be.hafizmuh.site/
 
 jobs:
   build:
@@ -29,7 +29,7 @@ jobs:
 
       - name: Build Vue app with ENV
         env:
-          VITE_API_BASE_URL: ${{ env.VITE_API_BASE_URL }}
+          _URL: ${{ env.VITE_API_BASE_URL }}
         run: |
           echo "🔧 Building with VITE_API_BASE_URL=$VITE_API_BASE_URL"
           npm run build
