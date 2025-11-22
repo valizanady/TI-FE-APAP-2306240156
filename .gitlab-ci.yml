@@ -33,10 +33,38 @@ docker-push:
     - docker:dind
   before_script:
     - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
+    # ✅ Verify that environment variables are set
+    - |
+      echo "========================================"
+      echo "🔧 Docker Build Configuration Check:"
+      echo "VITE_API_BASE_URL = ${VITE_API_BASE_URL:-NOT_SET}"
+      echo "DOCKER_IMAGE_NAME = ${DOCKER_IMAGE_NAME:-NOT_SET}"
+      echo "IMAGE_TAG = ${IMAGE_TAG:-NOT_SET}"
+      echo "========================================"
+
+      if [ -z "$VITE_API_BASE_URL" ]; then
+        echo "❌ ERROR: VITE_API_BASE_URL is not set in GitLab CI/CD Variables!"
+        echo "Please add it in: Settings > CI/CD > Variables"
+        exit 1
+      fi
   script:
-    # FE TI menggunakan VITE_API_BASE_URL (bukan VITE_API_URL)
-    - docker build --build-arg VITE_API_BASE_URL=$VITE_API_BASE_URL -t $DOCKER_IMAGE_NAME:$IMAGE_TAG .
-    - docker push $DOCKER_IMAGE_NAME:$IMAGE_TAG
+    # Build Docker image with API URL as build argument
+    - |
+      docker build \
+        --build-arg VITE_API_BASE_URL="$VITE_API_BASE_URL" \
+        --progress=plain \
+        -t "$DOCKER_IMAGE_NAME:$IMAGE_TAG" \
+        -t "$DOCKER_IMAGE_NAME:latest" \
+        .
+
+    # Push both tags
+    - docker push "$DOCKER_IMAGE_NAME:$IMAGE_TAG"
+    - docker push "$DOCKER_IMAGE_NAME:latest"
+
+    # Verify image was pushed
+    - echo "✅ Docker image pushed successfully:"
+    - echo "   - $DOCKER_IMAGE_NAME:$IMAGE_TAG"
+    - echo "   - $DOCKER_IMAGE_NAME:latest"
   only:
     - master
 
@@ -51,8 +79,8 @@ deploy:
     - ssh-keyscan -H "$EC2_HOST" >> ~/.ssh/known_hosts
 
     - |
-        echo "=== SSH CONNECTION CHECK ==="
-        ssh -vvv $EC2_USER@$EC2_HOST "echo CONNECTED"
+      echo "=== SSH CONNECTION CHECK ==="
+      ssh -vvv $EC2_USER@$EC2_HOST "echo CONNECTED"
 
   script:
     # Replace image tag
