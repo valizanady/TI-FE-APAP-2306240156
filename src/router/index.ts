@@ -55,11 +55,26 @@ const router = createRouter({
       component: () => import('@/views/EditPlanView.vue'),
     },
 
-    // Placeholder routes (will be implemented later)
+    // Activity Management routes
     {
       path: '/activities',
       name: 'activities',
-      component: () => import('../views/AboutView.vue'), // temporary placeholder
+      component: () => import('../views/ActivityListView.vue'),
+    },
+    {
+      path: '/activities/create',
+      name: 'create-activity',
+      component: () => import('../views/CreateActivityView.vue'),
+    },
+    {
+      path: '/activities/:id',
+      name: 'activity-detail',
+      component: () => import('../views/ActivityDetailView.vue'),
+    },
+    {
+      path: '/activities/:id/edit',
+      name: 'edit-activity',
+      component: () => import('../views/EditActivityView.vue'),
     },
 
     {
@@ -74,6 +89,74 @@ const router = createRouter({
       path: '/reports',
       name: 'reports',
       component: () => import('../views/AboutView.vue'), // temporary placeholder
+    },
+
+    // ========================================
+    // Auth Routes
+    // ========================================
+    {
+      path: '/login-success',
+      name: 'login-success',
+      component: () => import('@/views/LoginSuccessView.vue'),
+      meta: {
+        title: 'Login Success',
+      },
+    },
+    {
+      // Handle SSO redirect with /auth suffix (Nabeel's SSO adds this)
+      path: '/login-success/auth',
+      name: 'login-success-auth',
+      component: () => import('@/views/LoginSuccessView.vue'),
+      meta: {
+        title: 'Login Success',
+      },
+    },
+
+    // ========================================
+    // Top-Up Routes
+    // ========================================
+    {
+      path: '/topup',
+      name: 'topup',
+      component: () => import('@/views/TopUpView.vue'),
+      meta: {
+        title: 'Top-Up Transactions',
+        requiresAuth: true,
+      },
+    },
+    {
+      path: '/topup/create',
+      name: 'topup-create',
+      component: () => import('@/views/CreateTopUpView.vue'),
+      meta: {
+        title: 'Create Top-Up',
+        requiresAuth: true,
+        requiresRole: 'Customer',
+      },
+    },
+
+    // ========================================
+    // Payment Method Routes (Superadmin only)
+    // ========================================
+    {
+      path: '/payment-methods',
+      name: 'payment-methods',
+      component: () => import('@/views/PaymentMethodView.vue'),
+      meta: {
+        title: 'Payment Methods',
+        requiresAuth: true,
+        requiresRole: 'SUPERADMIN',
+      },
+    },
+    {
+      path: '/payment-methods/create',
+      name: 'payment-methods-create',
+      component: () => import('@/views/CreatePaymentMethodView.vue'),
+      meta: {
+        title: 'Add Payment Method',
+        requiresAuth: true,
+        requiresRole: 'SUPERADMIN',
+      },
     },
   ],
 })

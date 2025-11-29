@@ -114,10 +114,9 @@ export const usePackageStore = defineStore('package', {
       }
     },
 
-    // ✅ Create new package
+    // ✅ Create new package (userId auto-filled from JWT by backend)
     async create(payload: {
       packageName: string
-      userId: string
       quota: number
       startDate: string
       endDate: string
@@ -127,6 +126,7 @@ export const usePackageStore = defineStore('package', {
 
       try {
         console.log('🚀 Creating package:', payload)
+        // ✅ Backend automatically extracts userId from JWT token
         const res = await axios.post<CommonResponse<Package>>(`${API}package/create`, payload)
 
         console.log('✅ Package created:', res.data)

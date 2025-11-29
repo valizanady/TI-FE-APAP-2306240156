@@ -61,6 +61,18 @@
           </div>
           <div class="card-body">
             <div class="info-grid">
+              <!-- Plan ID -->
+              <div class="info-item">
+                <p class="info-label">Plan ID:</p>
+                <p class="info-value">{{ plan.id }}</p>
+              </div>
+
+              <!-- Package ID -->
+              <div class="info-item">
+                <p class="info-label">Package ID:</p>
+                <p class="info-value">{{ plan.packageId }}</p>
+              </div>
+
               <!-- Plan Name -->
               <div class="info-item">
                 <p class="info-label">Plan Name:</p>
@@ -129,6 +141,18 @@
                 </a>
               </div>
 
+              <!-- Ordered Activities IDs -->
+              <div class="info-item full-width">
+                <p class="info-label">Ordered Activities IDs:</p>
+                <p
+                  class="info-value"
+                  v-if="plan.orderedQuantities && plan.orderedQuantities.length > 0"
+                >
+                  {{ plan.orderedQuantities.map((oq) => oq.id).join(', ') }}
+                </p>
+                <p class="info-value text-gray-500" v-else>No activities ordered yet</p>
+              </div>
+
               <!-- Action Buttons -->
               <div class="action-buttons">
                 <button
@@ -137,7 +161,12 @@
                 >
                   View Package
                 </button>
-                <button class="btn btn-primary" @click="$router.push(`/plans/${plan.id}/edit`)">
+                <button
+                  v-if="canEditPlan"
+                  class="btn btn-primary"
+                  @click="$router.push(`/plans/${plan.id}/edit`)"
+                  :disabled="plan.packageStatus !== 'Pending'"
+                >
                   Edit Plan
                 </button>
                 <button class="btn btn-danger" @click="confirmDeletePlan">Delete Plan</button>
@@ -206,36 +235,48 @@
                 <table class="activities-table">
                   <thead>
                     <tr>
+                      <th>ID</th>
+                      <th>Plan ID</th>
                       <th>Activity Name</th>
                       <th>Activity ID</th>
+                      <th>Quota</th>
+                      <th>Price</th>
+                      <th>Ordered Quota</th>
                       <th>Start Date</th>
                       <th>End Date</th>
-                      <th>Price</th>
-                      <th>Quota</th>
-                      <th>Ordered Quota</th>
-                      <th>Total</th>
+                      <th>Available Quota</th>
                       <th v-if="plan.packageStatus === 'Pending'">Actions</th>
                     </tr>
                   </thead>
                   <tbody>
                     <tr v-for="activity in plan.orderedQuantities" :key="activity.id">
+                      <td><code class="activity-id">{{ activity.id }}</code></td>
+                      <td><code class="activity-id">{{ plan.id }}</code></td>
                       <td>{{ activity.activityName }}</td>
                       <td>
                         <code class="activity-id">{{ activity.activityId }}</code>
                       </td>
-                      <td>{{ formatDateTime(activity.startDate) }}</td>
-                      <td>{{ formatDateTime(activity.endDate) }}</td>
-                      <td class="price-cell">Rp {{ activity.price.toLocaleString('id-ID') }}</td>
                       <td class="quota-cell">
                         <span class="capacity-badge">
-                          {{ plan.packageStatus === 'Processed' ? activity.remaining ?? activity.quota : activity.quota }}
+                          {{
+                            plan.packageStatus === 'Processed'
+                              ? (activity.remaining ?? activity.quota)
+                              : activity.quota
+                          }}
                         </span>
                         <span v-if="plan.packageStatus === 'Processed'" class="capacity-note">
                           (Remaining after processing)
                         </span>
                       </td>
+                      <td class="price-cell">Rp {{ activity.price.toLocaleString('id-ID') }}</td>
                       <td class="quota-cell">{{ activity.orderedQuota }}</td>
-                      <td class="total-cell">Rp {{ activity.total.toLocaleString('id-ID') }}</td>
+                      <td>{{ formatDateTime(activity.startDate) }}</td>
+                      <td>{{ formatDateTime(activity.endDate) }}</td>
+                      <td class="quota-cell">
+                        <span class="capacity-badge" :class="{ 'low-capacity': (activity.quota - activity.orderedQuota) < 5 }">
+                          {{ activity.quota - activity.orderedQuota }}
+                        </span>
+                      </td>
                       <td v-if="plan.packageStatus === 'Pending'" class="actions-cell">
                         <div class="action-buttons-cell">
                           <button
@@ -340,6 +381,7 @@ import { ref, computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { usePlanStore } from '@/stores/plan'
 import { useOrderedActivityStore } from '@/stores/orderedActivity'
+import { useAuthStore } from '@/stores/auth'
 import { storeToRefs } from 'pinia'
 import type { PlanDetail, OrderedQuantity } from '@/interfaces/plan.interface'
 import AddActivityModal from '@/components/activity/AddActivityModal.vue'
@@ -353,9 +395,14 @@ const route = useRoute()
 const router = useRouter()
 const planStore = usePlanStore()
 const orderedActivityStore = useOrderedActivityStore()
+const authStore = useAuthStore()
 
 const { currentPlan, loading, error } = storeToRefs(planStore)
 const plan = computed(() => currentPlan.value as PlanDetail | null)
+
+// Auth
+const userRole = computed(() => authStore.getUserRole)
+const userId = computed(() => authStore.getUserId)
 
 // Modal states
 const showAddActivityModal = ref(false)
@@ -380,6 +427,24 @@ const currentTotalOrdered = computed(() => {
   )
 })
 
+// Authorization computed
+const canEditPlan = computed(() => {
+  if (!plan.value) return false
+
+  // Superadmin & TourPackageVendor can edit all plans
+  if (userRole.value === 'Superadmin' || userRole.value === 'TourPackageVendor') {
+    return true
+  }
+
+  // Customer: Will check ownership when clicking Edit button
+  // (We need to fetch package data to get userId)
+  if (userRole.value === 'Customer') {
+    return true // Show button, authorization check happens in EditPlanView
+  }
+
+  return false
+})
+
 // Lifecycle
 onMounted(async () => {
   const planId = route.params.id as string
@@ -391,7 +456,35 @@ onMounted(async () => {
     'Package Status:',
     plan.value?.packageStatus,
   )
+
+  // Check access permission for Customer
+  checkPlanAccessPermission()
 })
+
+// Check if Customer has access to view this plan
+async function checkPlanAccessPermission() {
+  if (!plan.value) return
+
+  // Customer hanya bisa lihat Plans dari package sendiri
+  if (userRole.value === 'Customer') {
+    // Get package details to check userId
+    try {
+      const packageId = plan.value.packageId
+      const response = await axios.get(`${BASE_URL}package/${packageId}`)
+      const packageData = response.data.data
+
+      const isOwnPackage = String(packageData.userId) === String(userId.value)
+
+      if (!isOwnPackage) {
+        alert('⚠️ You do not have permission to view this plan')
+        router.push('/package')
+      }
+    } catch (err) {
+      console.error('Failed to check plan access:', err)
+      router.push('/package')
+    }
+  }
+}
 
 // Methods
 function formatDateTime(dateStr?: string) {

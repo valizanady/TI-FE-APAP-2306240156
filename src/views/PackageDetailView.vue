@@ -24,12 +24,12 @@
         <div class="header-content">
           <h1 class="detail-title">{{ pkg?.packageName || 'Loading...' }}</h1>
           <div class="header-actions">
-            <!-- Process Package Button (only shown if eligible) -->
+            <!-- Process Package Button (Customer only, shows for Pending packages, disabled until all plans Fulfilled) -->
             <button
-              v-if="canProcess"
+              v-if="showProcessButton"
               class="btn btn-success"
               @click="handleProcessPackage"
-              :disabled="processing"
+              :disabled="!canProcess || processing"
             >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
@@ -50,6 +50,7 @@
             </button>
 
             <button
+              v-if="canEditPackage"
               class="btn btn-secondary"
               @click="router.push(`/package/${route.params.id}/edit`)"
             >
@@ -69,7 +70,7 @@
               </svg>
               Edit Package
             </button>
-            <VDeleteButton v-if="pkg" :package-id="pkg.id" redirect-to="/package" />
+            <VDeleteButton v-if="pkg && canDeletePackage" :package-id="pkg.id" redirect-to="/package" />
           </div>
         </div>
       </div>
@@ -386,37 +387,184 @@
                   <span :class="statusBadge(plan.status)">{{ plan.status }}</span>
                 </td>
                 <td>
-                  <button
-                    class="btn-view"
-                    @click="router.push(`/plans/${plan.id}`)"
-                    title="View Plan Details"
-                  >
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      class="btn-icon"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
+                  <div class="action-buttons-cell">
+                    <button
+                      class="btn-view"
+                      @click="router.push(`/plans/${plan.id}`)"
+                      title="View Plan Details"
                     >
-                      <path
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        stroke-width="2"
-                        d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
-                      />
-                      <path
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        stroke-width="2"
-                        d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
-                      />
-                    </svg>
-                    View
-                  </button>
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        class="btn-icon"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                      >
+                        <path
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          stroke-width="2"
+                          d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+                        />
+                        <path
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          stroke-width="2"
+                          d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
+                        />
+                      </svg>
+                      View
+                    </button>
+
+                    <!-- Edit Plan - only if package status is Pending -->
+                    <button
+                      v-if="canEditPlan"
+                      class="btn-edit"
+                      @click="router.push(`/plans/${plan.id}/edit`)"
+                      title="Edit Plan"
+                    >
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        class="btn-icon"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                      >
+                        <path
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          stroke-width="2"
+                          d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+                        />
+                      </svg>
+                      Edit
+                    </button>
+
+                    <!-- Delete Plan - only if package status is Pending -->
+                    <button
+                      v-if="canDeletePlan"
+                      class="btn-delete"
+                      @click="deletePlan(plan.id)"
+                      title="Delete Plan"
+                    >
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        class="btn-icon"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                      >
+                        <path
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          stroke-width="2"
+                          d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                        />
+                      </svg>
+                      Delete
+                    </button>
+                  </div>
                 </td>
               </tr>
             </tbody>
           </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ✅ NEW: Process Package Modal -->
+    <div v-if="showProcessModal" class="modal-overlay" @click.self="closeProcessModal">
+      <div class="modal-content">
+        <!-- Modal Header -->
+        <div class="modal-header">
+          <h2 class="modal-title">Confirm Package Processing</h2>
+          <button
+            class="modal-close"
+            @click="closeProcessModal"
+            :disabled="isProcessing"
+            aria-label="Close modal"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              class="close-icon"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M6 18L18 6M6 6l12 12"
+              />
+            </svg>
+          </button>
+        </div>
+
+        <!-- Modal Body -->
+        <div class="modal-body">
+          <div class="confirmation-details">
+            <div class="detail-row">
+              <span class="detail-label">Package Name:</span>
+              <span class="detail-value">{{ pkg?.packageName }}</span>
+            </div>
+            <div class="detail-row">
+              <span class="detail-label">Quota:</span>
+              <span class="detail-value">{{ pkg?.quota }} pax</span>
+            </div>
+            <div class="detail-row">
+              <span class="detail-label">Period:</span>
+              <span class="detail-value">
+                {{ formatDate(pkg?.startDate) }} - {{ formatDate(pkg?.endDate) }}
+              </span>
+            </div>
+            <div class="detail-row">
+              <span class="detail-label">Number of Plans:</span>
+              <span class="detail-value">{{ pkg?.plans?.length || 0 }} plan(s)</span>
+            </div>
+          </div>
+
+          <div class="warning-message">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              class="warning-icon"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+              />
+            </svg>
+            <div>
+              <p class="warning-title">This action cannot be undone</p>
+              <p class="warning-text">
+                Processing this package will lock it and prevent further modifications.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Modal Footer -->
+        <div class="modal-footer">
+          <button
+            class="btn-modal btn-cancel"
+            @click="closeProcessModal"
+            :disabled="isProcessing"
+          >
+            Cancel
+          </button>
+          <button
+            class="btn-modal btn-confirm"
+            @click="confirmProcessPackage"
+            :disabled="isProcessing"
+          >
+            <span v-if="isProcessing" class="loading-spinner"></span>
+            <span v-else>Confirm</span>
+          </button>
         </div>
       </div>
     </div>
@@ -431,16 +579,26 @@ import type { Package } from '@/interfaces/package.interface'
 import type { CommonResponse } from '@/interfaces/common.response.interface'
 import VDeleteButton from '@/components/package/VDeleteButton.vue'
 import { usePackageStore } from '@/stores/package'
+import { useAuthStore } from '@/stores/auth'
 
 const route = useRoute()
 const router = useRouter()
 const packageStore = usePackageStore()
+const authStore = useAuthStore()
 const pkg = ref<Package | null>(null)
 const processing = ref(false)
 const API = import.meta.env.VITE_API_BASE_URL
 
+// ✅ NEW: Modal state for Process Package
+const showProcessModal = ref(false)
+const isProcessing = ref(false)
+
+const userRole = computed(() => authStore.getUserRole)
+const userId = computed(() => authStore.getUserId)
+
 onMounted(async () => {
   await loadPackage()
+  checkAccessPermission()
 })
 
 async function loadPackage() {
@@ -449,51 +607,208 @@ async function loadPackage() {
   pkg.value = res.data.data
 }
 
-// Computed: Check if package can be processed
-const canProcess = computed(() => {
-  if (!pkg.value) return false
-
-  // Must be Pending or Draft status
-  const status = pkg.value.status?.toUpperCase()
-  if (status !== 'PENDING' && status !== 'DRAFT') return false
-
-  // Must have at least one plan
-  if (!pkg.value.plans || pkg.value.plans.length === 0) return false
-
-  // All plans must be Fulfilled
-  const allFulfilled = pkg.value.plans.every((plan) => plan.status === 'Fulfilled')
-
-  return allFulfilled
-})
-
-async function handleProcessPackage() {
+// Check if Customer has access to view this package
+function checkAccessPermission() {
   if (!pkg.value) return
 
+  // ⚠️ This is for UX only - Backend enforces security
+  // Customer hanya bisa akses:
+  // 1. Package yang dibuat sendiri
+  // 2. Package dari Admin/Vendor (based on creatorRole from backend)
+  if (userRole.value === 'Customer') {
+    const isOwnPackage = String(pkg.value.userId) === String(userId.value)
+
+    // Backend returns creatorRole, check if it's Admin/Vendor
+    const isAdminVendorPackage =
+      pkg.value.creatorRole === 'Superadmin' ||
+      pkg.value.creatorRole === 'TourPackageVendor' ||
+      pkg.value.creatorRole === null  // Backward compatibility for old data
+
+    if (!isOwnPackage && !isAdminVendorPackage) {
+      alert('⚠️ You do not have permission to view this package')
+      router.push('/package')
+    }
+  }
+}
+
+// Check if user can edit this package
+const canEditPackage = computed(() => {
+  if (!pkg.value) return false
+
+  // Customer hanya bisa edit package sendiri
+  if (userRole.value === 'Customer') {
+    return String(pkg.value.userId) === String(userId.value)
+  }
+
+  // Vendor/Admin bisa edit semua
+  return ['Superadmin', 'TourPackageVendor'].includes(userRole.value || '')
+})
+
+// Check if user can delete this package
+const canDeletePackage = computed(() => {
+  if (!pkg.value) return false
+
+  // Customer hanya bisa delete package sendiri dengan status Pending
+  if (userRole.value === 'Customer') {
+    return (
+      String(pkg.value.userId) === String(userId.value) && pkg.value.status === 'Pending'
+    )
+  }
+
+  // Vendor/Admin bisa delete semua yang Pending
+  return (
+    ['Superadmin', 'TourPackageVendor'].includes(userRole.value || '') &&
+    pkg.value.status === 'Pending'
+  )
+})
+
+// Computed: Check if Process Package button should be shown (CUSTOMER ONLY FEATURE)
+const showProcessButton = computed(() => {
+  if (!pkg.value) return false
+
+  // ✅ Button is ONLY for Customer role
+  if (userRole.value !== 'Customer') return false
+
+  // ✅ Customer can only see button for their own packages
+  const isOwnPackage = String(pkg.value.userId) === String(userId.value)
+  if (!isOwnPackage) return false
+
+  // ✅ Package status must be Pending
+  const isPending = pkg.value.status === 'Pending'
+
+  return isPending
+})
+
+// Computed: Check if Process Package button is enabled
+const canProcess = computed(() => {
+  if (!showProcessButton.value) return false
+
+  // ✅ All plans must exist and be Fulfilled to enable button
+  if (!pkg.value || !pkg.value.plans || pkg.value.plans.length === 0) return false
+  const allPlansFulfilled = pkg.value.plans.every((plan) => plan.status === 'Fulfilled')
+
+  return allPlansFulfilled
+})
+
+// Computed: Check if plans can be edited (only if package status is Pending)
+const canEditPlan = computed(() => {
+  if (!pkg.value) return false
+
+  // Customer hanya bisa edit plan dari package sendiri
+  if (userRole.value === 'Customer') {
+    return (
+      String(pkg.value.userId) === String(userId.value) && pkg.value.status === 'Pending'
+    )
+  }
+
+  // Vendor/Admin bisa edit semua plan yang Pending
+  return pkg.value.status === 'Pending'
+})
+
+// Computed: Check if plans can be deleted (only if package status is Pending)
+const canDeletePlan = computed(() => {
+  if (!pkg.value) return false
+
+  // Customer hanya bisa delete plan dari package sendiri
+  if (userRole.value === 'Customer') {
+    return (
+      String(pkg.value.userId) === String(userId.value) && pkg.value.status === 'Pending'
+    )
+  }
+
+  // Vendor/Admin bisa delete semua plan yang Pending
+  return pkg.value.status === 'Pending'
+})
+
+// Delete plan function
+async function deletePlan(planId: string) {
   const confirmed = confirm(
-    'Are you sure you want to process this package?\n\n' +
-      'This will:\n' +
-      '✓ Change package status to "Processed"\n' +
-      '✓ Book all activities (reduce capacity)\n' +
-      '✓ Lock the package (no more edits allowed)\n\n' +
-      'This action cannot be undone.',
+    'Are you sure you want to delete this plan?\n\nThis action cannot be undone.',
   )
 
   if (!confirmed) return
 
-  processing.value = true
-
   try {
-    await packageStore.processPackage(pkg.value.id)
-
-    alert('✅ Package processed successfully!\n\nAll activities have been booked.')
+    await axios.delete(`${API}plans/${planId}`)
+    alert('✅ Plan deleted successfully!')
 
     // Reload package data
     await loadPackage()
   } catch (error) {
-    const errorMsg = error instanceof Error ? error.message : 'Failed to process package'
-    alert(`❌ Error processing package:\n\n${errorMsg}`)
+    const errorMsg = error instanceof Error ? error.message : 'Failed to delete plan'
+    alert(`❌ Error deleting plan:\n\n${errorMsg}`)
+  }
+}
+
+// ✅ NEW: Open Process Modal (with validation)
+function handleProcessPackage() {
+  if (!pkg.value) return
+
+  // Show modal for confirmation
+  showProcessModal.value = true
+}
+
+// ✅ NEW: Validate & Process Package
+async function confirmProcessPackage() {
+  if (!pkg.value) return
+
+  // ✅ FRONTEND VALIDATION 1: Package must be Pending
+  if (pkg.value.status !== 'Pending') {
+    alert('❌ Only packages with "Pending" status can be processed.')
+    showProcessModal.value = false
+    return
+  }
+
+  // ✅ FRONTEND VALIDATION 2: Must have at least 1 plan
+  if (!pkg.value.plans || pkg.value.plans.length === 0) {
+    alert('❌ This package cannot be processed because it has no plans.')
+    return  // Keep modal open
+  }
+
+  // ✅ FRONTEND VALIDATION 3: All plans must be Fulfilled
+  const hasUnfulfilledPlan = pkg.value.plans.some((plan) => plan.status !== 'Fulfilled')
+  if (hasUnfulfilledPlan) {
+    const fulfilledCount = pkg.value.plans.filter((p) => p.status === 'Fulfilled').length
+    const totalCount = pkg.value.plans.length
+    alert(
+      `❌ All plans must be fulfilled before processing this package.\n\n` +
+      `Current status: ${fulfilledCount}/${totalCount} plans fulfilled.\n\n` +
+      `Please ensure all plans are fulfilled first.`,
+    )
+    return  // Keep modal open
+  }
+
+  // ✅ All validations passed - call API
+  isProcessing.value = true
+
+  try {
+    await packageStore.processPackage(pkg.value.id)
+
+    // Success
+    showProcessModal.value = false
+    alert('✅ Package processed successfully!')
+
+    // Reload package data
+    await loadPackage()
+  } catch (error) {
+    // Error from backend
+    let errorMsg = 'Failed to process package'
+
+    if (error instanceof Error) {
+      errorMsg = error.message
+    }
+
+    alert(`❌ There was an error processing this package: ${errorMsg}`)
+    // Keep modal open on error
   } finally {
-    processing.value = false
+    isProcessing.value = false
+  }
+}
+
+// ✅ NEW: Close modal
+function closeProcessModal() {
+  if (!isProcessing.value) {
+    showProcessModal.value = false
   }
 }
 
@@ -643,6 +958,12 @@ function statusBadge(status?: string) {
 }
 
 /* View Button */
+.action-buttons-cell {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
 .btn-view {
   display: inline-flex;
   align-items: center;
@@ -665,6 +986,58 @@ function statusBadge(status?: string) {
 }
 
 .btn-view .btn-icon {
+  width: 1rem;
+  height: 1rem;
+}
+
+.btn-edit {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.5rem 0.875rem;
+  background: linear-gradient(135deg, #059669 0%, #10b981 100%);
+  color: white;
+  border: none;
+  border-radius: 0.375rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-edit:hover {
+  background: linear-gradient(135deg, #047857 0%, #059669 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 6px -1px rgba(5, 150, 105, 0.2);
+}
+
+.btn-edit .btn-icon {
+  width: 1rem;
+  height: 1rem;
+}
+
+.btn-delete {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.5rem 0.875rem;
+  background: linear-gradient(135deg, #dc2626 0%, #ef4444 100%);
+  color: white;
+  border: none;
+  border-radius: 0.375rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-delete:hover {
+  background: linear-gradient(135deg, #b91c1c 0%, #dc2626 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 6px -1px rgba(220, 38, 38, 0.2);
+}
+
+.btn-delete .btn-icon {
   width: 1rem;
   height: 1rem;
 }
@@ -1030,6 +1403,243 @@ function statusBadge(status?: string) {
   }
 
   .btn-primary {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+/* Process Package Modal Styles */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  animation: fadeIn 0.2s ease-in-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.modal-content {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+  max-width: 500px;
+  width: 90%;
+  max-height: 90vh;
+  overflow-y: auto;
+  animation: slideUp 0.3s ease-out;
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.modal-header {
+  padding: 24px 24px 20px;
+  border-bottom: 1px solid #e0e0e0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.modal-header h3 {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 600;
+  color: #1a1a1a;
+}
+
+.close-button {
+  background: none;
+  border: none;
+  font-size: 28px;
+  color: #666;
+  cursor: pointer;
+  padding: 0;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  transition: all 0.2s;
+}
+
+.close-button:hover {
+  background-color: #f5f5f5;
+  color: #1a1a1a;
+}
+
+.close-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.modal-body {
+  padding: 24px;
+}
+
+.package-details {
+  background-color: #f8f9fa;
+  border-radius: 8px;
+  padding: 16px;
+  margin-bottom: 16px;
+}
+
+.detail-row {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.detail-row:last-child {
+  margin-bottom: 0;
+}
+
+.detail-label {
+  font-weight: 500;
+  color: #666;
+}
+
+.detail-value {
+  font-weight: 600;
+  color: #1a1a1a;
+}
+
+.warning-message {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 16px;
+  background-color: #fff3cd;
+  border: 1px solid #ffc107;
+  border-radius: 8px;
+  color: #856404;
+}
+
+.warning-icon {
+  font-size: 20px;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.warning-text {
+  flex: 1;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.modal-footer {
+  padding: 20px 24px;
+  border-top: 1px solid #e0e0e0;
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+}
+
+.btn-cancel,
+.btn-confirm {
+  padding: 10px 24px;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  border: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.btn-cancel {
+  background-color: #f5f5f5;
+  color: #666;
+}
+
+.btn-cancel:hover:not(:disabled) {
+  background-color: #e0e0e0;
+  color: #1a1a1a;
+}
+
+.btn-confirm {
+  background-color: #28a745;
+  color: white;
+}
+
+.btn-confirm:hover:not(:disabled) {
+  background-color: #218838;
+}
+
+.btn-cancel:disabled,
+.btn-confirm:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.loading-spinner {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-top-color: white;
+  border-radius: 50%;
+  animation: spin 0.6s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Responsive adjustments */
+@media (max-width: 576px) {
+  .modal-content {
+    width: 95%;
+    max-height: 95vh;
+  }
+
+  .modal-header,
+  .modal-body,
+  .modal-footer {
+    padding: 16px;
+  }
+
+  .modal-header h3 {
+    font-size: 18px;
+  }
+
+  .detail-row {
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .modal-footer {
+    flex-direction: column;
+  }
+
+  .btn-cancel,
+  .btn-confirm {
     width: 100%;
     justify-content: center;
   }

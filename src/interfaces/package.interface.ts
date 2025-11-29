@@ -13,6 +13,10 @@ export interface Plan {
 export interface Package {
   id: string
   userId: string
+
+  // ✅ NEW: Creator role from backend (for authorization)
+  creatorRole?: string  // 'Customer' | 'Superadmin' | 'TourPackageVendor'
+
   packageName: string
   quota: number
   price: number

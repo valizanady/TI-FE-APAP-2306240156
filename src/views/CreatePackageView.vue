@@ -31,18 +31,6 @@
             />
           </div>
 
-          <!-- User ID -->
-          <div>
-            <label class="form-label">User ID *</label>
-            <input
-              v-model="form.userId"
-              type="text"
-              placeholder="user001"
-              class="form-input"
-              required
-            />
-          </div>
-
           <!-- Quota -->
           <div>
             <label class="form-label">Quota *</label>
@@ -100,6 +88,7 @@
 import { reactive, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { usePackageStore } from '@/stores/package'
+import { toast } from 'vue-sonner'
 
 const router = useRouter()
 const store = usePackageStore()
@@ -107,7 +96,6 @@ const errorMsg = ref<string | null>(null)
 
 const form = reactive({
   packageName: '',
-  userId: '',
   quota: 1,
   startDate: '',
   endDate: '',
@@ -121,10 +109,12 @@ const onSubmit = async () => {
   }
   try {
     await store.create(form)
+    toast.success('✅ Package created successfully')
     router.push('/package')
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
   } catch (e: any) {
     errorMsg.value = e.response?.data?.message ?? e.message
+    toast.error(`❌ ${errorMsg.value}`)
   }
 }
 

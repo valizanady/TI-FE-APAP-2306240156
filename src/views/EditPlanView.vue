@@ -352,6 +352,7 @@ const formData = ref<UpdatePlanRequest>({
   endDate: '',
   startLocation: '',
   endLocation: '',
+  price: 0,
 })
 
 const errors = ref<Record<string, string>>({})
@@ -514,7 +515,6 @@ onMounted(async () => {
       startLocation: plan.value.startLocation,
       endLocation: plan.value.endLocation,
     })
-
     // Populate form with current data
     formData.value = {
       planName: plan.value.planName,
@@ -522,6 +522,7 @@ onMounted(async () => {
       endDate: formatDateForInput(plan.value.endDate),
       startLocation: plan.value.startLocation,
       endLocation: plan.value.endLocation,
+      price: plan.value.price,
     }
 
     // Try to find and set province codes based on existing locations

@@ -163,6 +163,7 @@
 import { ref, computed, onMounted, h } from 'vue'
 import { useRouter } from 'vue-router'
 import { usePackageStore } from '@/stores/package'
+import { useAuthStore } from '@/stores/auth'
 import VDataTable from '@/components/common/VDataTable.vue'
 import VButton from '@/components/common/VButton.vue'
 import VDeleteButton from '@/components/package/VDeleteButton.vue'
@@ -170,8 +171,35 @@ import type { ColumnDef } from '@tanstack/vue-table'
 import type { Package } from '@/interfaces/package.interface'
 
 const store = usePackageStore()
+const authStore = useAuthStore()
 const router = useRouter()
 const searchQuery = ref('')
+
+const userRole = computed(() => authStore.getUserRole)
+const userId = computed(() => authStore.getUserId)
+
+// RBAC: Check if user can edit/delete/process packages
+const canManagePackages = computed(() => {
+  return ['Superadmin', 'TourPackageVendor'].includes(userRole.value || '')
+})
+
+const canEdit = (pkg: Package) => {
+  // Customer hanya bisa edit package sendiri
+  if (userRole.value === 'Customer') {
+    return String(pkg.userId) === String(userId.value)
+  }
+  // Vendor/Admin bisa edit semua
+  return canManagePackages.value
+}
+
+const canDelete = (pkg: Package) => {
+  // Customer hanya bisa delete package sendiri dengan status Pending
+  if (userRole.value === 'Customer') {
+    return String(pkg.userId) === String(userId.value) && pkg.status === 'Pending'
+  }
+  // Vendor/Admin bisa delete semua yang Pending
+  return canManagePackages.value && pkg.status === 'Pending'
+}
 
 onMounted(async () => {
   await store.fetchAll()
@@ -179,6 +207,11 @@ onMounted(async () => {
 })
 
 const filteredPackages = computed(() => {
+  // ✅ Backend sudah melakukan role-based filtering berdasarkan creatorRole
+  // Customer: Melihat package sendiri + package dari Admin/Vendor
+  // Admin/Vendor: Melihat semua package
+
+  // Frontend hanya perlu filter berdasarkan search query
   return store.items.filter((p) =>
     p.packageName.toLowerCase().includes(searchQuery.value.toLowerCase()),
   )
@@ -233,31 +266,48 @@ const columns: ColumnDef<Package>[] = [
   {
     header: 'Actions',
     id: 'actions',
-    cell: ({ row }) =>
-      h('div', { class: 'action-buttons' }, [
+    cell: ({ row }) => {
+      const pkg = row.original
+      const actions = [
+        // Details button - always visible
         h(
           VButton,
           {
             variant: 'primary',
             size: 'sm',
-            onClick: () => router.push(`/package/${row.original.id}`),
+            onClick: () => router.push(`/package/${pkg.id}`),
           },
           () => 'Details',
         ),
-        h(
-          VButton,
-          {
-            variant: 'success',
-            size: 'sm',
-            onClick: () => router.push(`/package/${row.original.id}/edit`),
-          },
-          () => 'Edit',
-        ),
-        h(VDeleteButton, {
-          packageId: row.original.id,
-          redirectTo: '/package',
-        }),
-      ]),
+      ]
+
+      // Edit button - only if user has permission
+      if (canEdit(pkg)) {
+        actions.push(
+          h(
+            VButton,
+            {
+              variant: 'success',
+              size: 'sm',
+              onClick: () => router.push(`/package/${pkg.id}/edit`),
+            },
+            () => 'Edit',
+          ),
+        )
+      }
+
+      // Delete button - only if status is Pending and user has permission
+      if (canDelete(pkg)) {
+        actions.push(
+          h(VDeleteButton, {
+            packageId: pkg.id,
+            redirectTo: '/package',
+          }),
+        )
+      }
+
+      return h('div', { class: 'action-buttons' }, actions)
+    },
   },
 ]
 </script>

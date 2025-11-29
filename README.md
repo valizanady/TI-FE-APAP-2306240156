@@ -2,6 +2,23 @@
 
 This template should help get you started developing with Vue 3 in Vite.
 
+## 📚 Documentation
+
+**Authentication Flow:**
+- 🔥 **[Complete Auth Flow Guide](./AUTH-FLOW-SYNC-GUIDE.md)** - Comprehensive authentication documentation (synchronized with backend)
+- 🧪 **[Login Testing Guide](./LOGIN-TEST-GUIDE.md)** - Step-by-step testing instructions
+- 🛠️ **[Quick Fix Summary](./QUICK-FIX-SUMMARY.md)** - Recent authentication fixes
+- 💰 **[Top-Up Implementation](./TOP-UP-PAYMENT-IMPLEMENTATION-SUMMARY.md)** - Top-Up and Payment Method features
+
+**Key Features:**
+- ✅ Nabeel's SSO Authentication (OTT Exchange Pattern)
+- ✅ JWT Token Management
+- ✅ Role-Based Access Control (Customer, Travel Agent, Superadmin)
+- ✅ Top-Up Transaction Management
+- ✅ Payment Method CRUD (Superadmin only)
+
+---
+
 ## Recommended IDE Setup
 
 [VS Code](https://code.visualstudio.com/) + [Vue (Official)](https://marketplace.visualstudio.com/items?itemName=Vue.volar) (and disable Vetur).

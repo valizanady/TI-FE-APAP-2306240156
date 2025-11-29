@@ -3,7 +3,8 @@
     <div class="statistics-wrapper">
       <!-- Header -->
       <div class="page-header">
-        <h1 class="page-title">Potential Revenue</h1>
+        <h1 class="page-title">Revenue Statistics</h1>
+        <p class="page-subtitle">View revenue statistics by year and month</p>
       </div>
 
       <!-- Filter Card -->
@@ -82,35 +83,121 @@
       <!-- Statistics Content -->
       <div v-else-if="statistics" class="stats-content">
         <!-- Chart Card -->
-        <div class="chart-card">
+        <div class="chart-card full-width">
           <div class="card-header">
-            <h2 class="card-title">Revenue by Activity Type</h2>
+            <h2 class="card-title">
+              {{ selectedMonth ? 'Revenue by Activity Type' : 'Monthly Revenue Overview' }}
+            </h2>
+            <span class="card-subtitle">{{ statistics.period }}</span>
           </div>
           <div class="card-body">
             <canvas ref="chartCanvas" style="max-height: 400px"></canvas>
           </div>
         </div>
 
-        <!-- Summary Card -->
-        <div class="summary-card">
-          <div class="summary-header">
-            <h3 class="summary-title">Summary</h3>
-          </div>
-          <div class="summary-body">
-            <div class="summary-item">
-              <span class="summary-label">Total Revenue:</span>
-              <span class="summary-value total">
-                Rp {{ statistics.totalRevenue.toLocaleString('id-ID') }}
-              </span>
+        <!-- Data Grid: Summary + Table -->
+        <div class="data-grid">
+          <!-- Summary Card -->
+          <div class="summary-card">
+            <div class="summary-header">
+              <h3 class="summary-title">Summary</h3>
             </div>
-            <div class="summary-divider"></div>
-            <div
-              v-for="(revenue, activityType) in statistics.revenueByActivityType"
-              :key="activityType"
-              class="summary-item"
-            >
-              <span class="summary-label">{{ activityType }}:</span>
-              <span class="summary-value">Rp {{ revenue.toLocaleString('id-ID') }}</span>
+            <div class="summary-body">
+              <div class="summary-item">
+                <span class="summary-label">Period:</span>
+                <span class="summary-value">{{ statistics.period }}</span>
+              </div>
+              <div class="summary-item">
+                <span class="summary-label">Total Revenue:</span>
+                <span class="summary-value total">
+                  Rp {{ statistics.totalRevenue.toLocaleString('id-ID') }}
+                </span>
+              </div>
+              <div class="summary-divider"></div>
+
+              <!-- Monthly Breakdown (if month is selected) -->
+              <template v-if="selectedMonth">
+                <div
+                  v-for="(revenue, activityType) in statistics.breakdown"
+                  :key="activityType"
+                  class="summary-item"
+                >
+                  <span class="summary-label">{{ activityType }}:</span>
+                  <span class="summary-value">Rp {{ Number(revenue).toLocaleString('id-ID') }}</span>
+                </div>
+              </template>
+
+              <!-- Yearly Summary (if no month selected) -->
+              <template v-else>
+                <p class="summary-note">Total revenue across all months</p>
+              </template>
+            </div>
+          </div>
+
+          <!-- Detail Table -->
+          <div class="table-card">
+            <div class="table-header">
+              <h3 class="table-title">Detail Breakdown</h3>
+            </div>
+            <div class="table-container">
+              <!-- Monthly Breakdown Table -->
+              <table v-if="selectedMonth" class="data-table">
+                <thead>
+                  <tr>
+                    <th>Activity Type</th>
+                    <th class="text-right">Revenue</th>
+                    <th class="text-right">Percentage</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr
+                    v-for="(revenue, activityType) in statistics.breakdown"
+                    :key="activityType"
+                  >
+                    <td>
+                      <div class="type-badge">{{ activityType }}</div>
+                    </td>
+                    <td class="text-right">Rp {{ Number(revenue).toLocaleString('id-ID') }}</td>
+                    <td class="text-right">
+                      <span class="percentage-badge">
+                        {{ ((Number(revenue) / statistics.totalRevenue) * 100).toFixed(1) }}%
+                      </span>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+
+              <!-- Yearly Breakdown Table -->
+              <table v-else class="data-table">
+                <thead>
+                  <tr>
+                    <th>Month</th>
+                    <th class="text-right">Total Revenue</th>
+                    <th class="text-right">Flight</th>
+                    <th class="text-right">Accommodation</th>
+                    <th class="text-right">Vehicle Rental</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr v-for="(monthData, monthName) in statistics.breakdown" :key="monthName">
+                    <td>
+                      <div class="month-name">{{ monthName }}</div>
+                    </td>
+                    <td class="text-right font-semibold">
+                      Rp {{ getMonthTotal(monthData).toLocaleString('id-ID') }}
+                    </td>
+                    <td class="text-right">
+                      Rp {{ (monthData.Flight || 0).toLocaleString('id-ID') }}
+                    </td>
+                    <td class="text-right">
+                      Rp {{ (monthData.Accommodation || 0).toLocaleString('id-ID') }}
+                    </td>
+                    <td class="text-right">
+                      Rp {{ (monthData['Vehicle Rental'] || 0).toLocaleString('id-ID') }}
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
             </div>
           </div>
         </div>
@@ -178,14 +265,23 @@ const months = [
   'December',
 ]
 
-
-
-
-
+// Helper Functions
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function getMonthTotal(monthData: any): number {
+  if (typeof monthData === 'number') return monthData
+  const data = monthData as Record<string, number>
+  return data.totalRevenue || 0
+}
 
 // Methods
 async function handleShowStatistics() {
-  await statisticsStore.fetchStatistics(selectedYear.value, selectedMonth.value)
+  if (selectedMonth.value === null) {
+    // Yearly statistics: GET /api/statistics/revenue/yearly/{year}
+    await statisticsStore.fetchYearlyRevenue(selectedYear.value)
+  } else {
+    // Monthly statistics: GET /api/statistics/revenue/monthly/{year}/{month}
+    await statisticsStore.fetchMonthlyRevenue(selectedYear.value, selectedMonth.value)
+  }
 }
 
 function renderChart() {
@@ -199,12 +295,29 @@ function renderChart() {
   const ctx = chartCanvas.value.getContext('2d')
   if (!ctx) return
 
-  const revenueData = statistics.value.revenueByActivityType
-  const labels = Object.keys(revenueData)
-  const data = Object.values(revenueData)
+  const breakdown = statistics.value.breakdown
+  let labels: string[] = []
+  let data: number[] = []
+  let chartTitle = 'Revenue Chart'
+
+  // Check if monthly (breakdown contains activity types)
+  if (selectedMonth.value !== null) {
+    // Monthly breakdown per activityType - BAR CHART
+    labels = Object.keys(breakdown)
+    data = Object.values(breakdown).map((v) => Number(v))
+    chartTitle = `Revenue by Activity Type - ${statistics.value.period}`
+  } else {
+    // Yearly breakdown per month - BAR CHART
+    labels = Object.keys(breakdown)
+    data = labels.map((month) => {
+      const monthData = breakdown[month] as Record<string, number>
+      return monthData.totalRevenue || 0
+    })
+    chartTitle = `Monthly Revenue - ${statistics.value.period}`
+  }
 
   chartInstance = new Chart(ctx, {
-    type: 'bar',
+    type: 'bar', // ALWAYS USE BAR CHART
     data: {
       labels,
       datasets: [
@@ -225,7 +338,44 @@ function renderChart() {
           display: false,
         },
         title: {
-          display: false,
+          display: true,
+          text: chartTitle,
+          font: {
+            size: 16,
+            weight: 'bold',
+          },
+        },
+        tooltip: {
+          callbacks: {
+            label: function (context) {
+              return 'Revenue: Rp ' + Number(context.parsed.y).toLocaleString('id-ID')
+            },
+            afterLabel: function (context) {
+              // Show breakdown for yearly view
+              if (selectedMonth.value === null && statistics.value) {
+                const monthName = context.label
+                const monthData = statistics.value.breakdown[monthName] as Record<string, number>
+                if (monthData) {
+                  const details: string[] = []
+                  if (monthData.Flight) {
+                    details.push(`  Flight: Rp ${monthData.Flight.toLocaleString('id-ID')}`)
+                  }
+                  if (monthData.Accommodation) {
+                    details.push(
+                      `  Accommodation: Rp ${monthData.Accommodation.toLocaleString('id-ID')}`,
+                    )
+                  }
+                  if (monthData['Vehicle Rental']) {
+                    details.push(
+                      `  Vehicle Rental: Rp ${monthData['Vehicle Rental'].toLocaleString('id-ID')}`,
+                    )
+                  }
+                  return details
+                }
+              }
+              return ''
+            },
+          },
         },
       },
       scales: {
@@ -324,8 +474,7 @@ onMounted(() => {
 .filter-select:focus {
   outline: none;
   border-color: #6b46c1;
-  ring: 2px;
-  ring-color: rgba(107, 70, 193, 0.2);
+  box-shadow: 0 0 0 2px rgba(107, 70, 193, 0.2);
 }
 
 .btn-show-stats {
@@ -456,8 +605,14 @@ onMounted(() => {
 
 /* Statistics Content */
 .stats-content {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.data-grid {
   display: grid;
-  grid-template-columns: 2fr 1fr;
+  grid-template-columns: 1fr 2fr;
   gap: 1.5rem;
 }
 
@@ -470,9 +625,16 @@ onMounted(() => {
   overflow: hidden;
 }
 
+.chart-card.full-width {
+  grid-column: 1 / -1;
+}
+
 .card-header {
   background: linear-gradient(135deg, #6b46c1 0%, #8b5cf6 100%);
   padding: 1.25rem 1.5rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 }
 
 .card-title {
@@ -480,6 +642,12 @@ onMounted(() => {
   font-weight: 600;
   color: #ffffff;
   margin: 0;
+}
+
+.card-subtitle {
+  font-size: 0.875rem;
+  color: rgba(255, 255, 255, 0.9);
+  font-weight: 500;
 }
 
 .card-body {
@@ -547,9 +715,129 @@ onMounted(() => {
   margin: 1rem 0;
 }
 
+.summary-note {
+  font-size: 0.875rem;
+  color: #6b7280;
+  font-style: italic;
+  text-align: center;
+  margin: 0;
+}
+
+/* Table Card */
+.table-card {
+  background-color: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 0.75rem;
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  overflow: hidden;
+}
+
+.table-header {
+  background-color: #f9fafb;
+  padding: 1rem 1.5rem;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.table-title {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #1f2937;
+  margin: 0;
+}
+
+.table-container {
+  overflow-x: auto;
+}
+
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.data-table thead {
+  background-color: #f9fafb;
+  border-bottom: 2px solid #e5e7eb;
+}
+
+.data-table th {
+  padding: 0.75rem 1rem;
+  text-align: left;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #6b7280;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.data-table th.text-right {
+  text-align: right;
+}
+
+.data-table tbody tr {
+  border-bottom: 1px solid #e5e7eb;
+  transition: background-color 0.2s;
+}
+
+.data-table tbody tr:hover {
+  background-color: #f9fafb;
+}
+
+.data-table tbody tr:last-child {
+  border-bottom: none;
+}
+
+.data-table td {
+  padding: 1rem;
+  font-size: 0.875rem;
+  color: #1f2937;
+}
+
+.data-table td.text-right {
+  text-align: right;
+}
+
+.data-table td.font-semibold {
+  font-weight: 600;
+  color: #111827;
+}
+
+.type-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.25rem 0.75rem;
+  background-color: #ede9fe;
+  color: #6b46c1;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.percentage-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.25rem 0.625rem;
+  background-color: #dcfce7;
+  color: #15803d;
+  border-radius: 0.375rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.month-name {
+  font-weight: 500;
+  color: #374151;
+}
+
+.page-subtitle {
+  margin-top: 0.5rem;
+  color: #6b7280;
+  font-size: 0.875rem;
+  font-weight: 400;
+}
+
 /* Responsive */
 @media (max-width: 1024px) {
-  .stats-content {
+  .data-grid {
     grid-template-columns: 1fr;
   }
 }
@@ -565,6 +853,15 @@ onMounted(() => {
 
   .filter-grid {
     grid-template-columns: 1fr;
+  }
+
+  .data-table {
+    font-size: 0.75rem;
+  }
+
+  .data-table th,
+  .data-table td {
+    padding: 0.5rem;
   }
 }
 </style>

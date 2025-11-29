@@ -28,6 +28,7 @@ export interface UpdatePlanRequest {
   endDate: string
   startLocation: string
   endLocation: string
+  price: number
 }
 
 export interface Province {
@@ -63,9 +64,11 @@ export interface PlanDetail {
   endDate: string
   startLocation: string
   endLocation: string
-  price: number
+  price: number // Total calculated price (from ordered activities)
+  planPrice?: number // Original plan price (for edit form)
   packageId: string
   packageName: string
   packageStatus: string // Remove optional, make it required
+  packageUserId?: string // Add userId from package (optional for backward compatibility)
   orderedQuantities: OrderedQuantity[]
 }
