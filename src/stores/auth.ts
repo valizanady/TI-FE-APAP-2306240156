@@ -3,8 +3,8 @@ import axios from 'axios'
 import { defineStore } from 'pinia'
 import { toast } from 'vue-sonner'
 
-const AUTH_URL_API = import.meta.env.VITE_AUTH_BACKEND_URL || 'http://2306240156-be.hafizmuh.site/api/auth'
-const PROFILE_FE_LOGIN_URL = import.meta.env.VITE_AUTH_SERVICE_URL || 'http://2306275166-fe.hafizmuh.site'
+const AUTH_URL_API = import.meta.env.VITE_AUTH_BACKEND_URL || 'http://2306275166-be.hafizmuh.site/api/auth'
+const PROFILE_FE_LOGIN_URL = import.meta.env.VITE_AUTH_SERVICE_URL || 'http://2306275166-fe.hafizmuh.site/'
 
 interface User {
   id: number | string
