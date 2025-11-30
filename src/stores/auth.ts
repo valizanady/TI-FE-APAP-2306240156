@@ -4,7 +4,7 @@ import { defineStore } from 'pinia'
 import { toast } from 'vue-sonner'
 
 const AUTH_URL_API = import.meta.env.VITE_AUTH_BACKEND_URL || 'http://2306240156-be.hafizmuh.site/api/auth'
-const PROFILE_FE_LOGIN_URL = import.meta.env.VITE_AUTH_SERVICE_URL || 'http://2306275166-be.hafizmuh.site'
+const PROFILE_FE_LOGIN_URL = import.meta.env.VITE_AUTH_SERVICE_URL || 'http://2306275166-be.hafizmuh.site/api'
 
 interface User {
   id: number | string
@@ -77,8 +77,8 @@ export const useAuthStore = defineStore('auth', {
     },
 
     loginRedirect() {
-      // const callbackUrl = 'http://2306240156-fe.hafizmuh.site/login-success'
-      const callbackUrl = 'http://localhost:5173/login-success'
+      const callbackUrl = 'http://2306240156-fe.hafizmuh.site/login-success'
+      // const callbackUrl = 'http://localhost:5173/login-success'
       const encodedCallback = encodeURIComponent(callbackUrl)
 
       console.log('Redirecting to:', `${PROFILE_FE_LOGIN_URL}/auth/login?redirect=${encodedCallback}`)
