@@ -24,7 +24,7 @@ build:
       - k8s/ingress.yaml
     expire_in: 1 hour
   only:
-    - backlog
+    - main
 
 docker-push:
   stage: docker-push
@@ -66,7 +66,7 @@ docker-push:
     - echo "   - $DOCKER_IMAGE_NAME:$IMAGE_TAG"
     - echo "   - $DOCKER_IMAGE_NAME:latest"
   only:
-    - backlog
+    - main
 
 deploy:
   stage: deploy
@@ -99,4 +99,4 @@ deploy:
     - ssh $EC2_USER@$EC2_HOST "sudo k3s kubectl rollout status deployment/tourpackage-fe -n default"
 
   only:
-    - backlog
+    - main
