@@ -77,7 +77,7 @@ export const useAuthStore = defineStore('auth', {
     },
 
     loginRedirect() {
-      const callbackUrl = 'http://localhost:5173/login-success'
+      const callbackUrl = 'http://2306240156-fe.hafizmuh.site/login-success'
 
       const encodedCallback = encodeURIComponent(callbackUrl)
 
