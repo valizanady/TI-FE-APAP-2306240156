@@ -179,7 +179,7 @@
                   </tr>
                 </thead>
                 <tbody>
-                  <tr v-for="(monthData, monthName) in statistics.breakdown" :key="monthName">
+                  <tr v-for="(monthData, monthName) in sortedBreakdown" :key="monthName">
                     <td>
                       <div class="month-name">{{ monthName }}</div>
                     </td>
@@ -238,6 +238,36 @@ const statisticsStore = useStatisticsStore()
 const { currentStatistics, loading, error } = storeToRefs(statisticsStore)
 
 const statistics = computed(() => currentStatistics.value)
+
+// Sorted breakdown for yearly view (months in order)
+const sortedBreakdown = computed(() => {
+  if (!statistics.value || selectedMonth.value !== null) {
+    return statistics.value?.breakdown || {}
+  }
+
+  // For yearly view, sort months chronologically
+  const monthOrder = [
+    'January',
+    'February',
+    'March',
+    'April',
+    'May',
+    'June',
+    'July',
+    'August',
+    'September',
+    'October',
+    'November',
+    'December',
+  ]
+
+  const breakdown = statistics.value.breakdown
+  const sortedEntries = Object.entries(breakdown).sort(([monthA], [monthB]) => {
+    return monthOrder.indexOf(monthA) - monthOrder.indexOf(monthB)
+  })
+
+  return Object.fromEntries(sortedEntries)
+})
 
 // Filter state
 const currentYear = new Date().getFullYear()
@@ -308,7 +338,28 @@ function renderChart() {
     chartTitle = `Revenue by Activity Type - ${statistics.value.period}`
   } else {
     // Yearly breakdown per month - BAR CHART
-    labels = Object.keys(breakdown)
+    // Sort months in chronological order (January to December)
+    const monthOrder = [
+      'January',
+      'February',
+      'March',
+      'April',
+      'May',
+      'June',
+      'July',
+      'August',
+      'September',
+      'October',
+      'November',
+      'December',
+    ]
+
+    // Get month names from breakdown and sort them
+    const monthNames = Object.keys(breakdown)
+    labels = monthNames.sort((a, b) => {
+      return monthOrder.indexOf(a) - monthOrder.indexOf(b)
+    })
+
     data = labels.map((month) => {
       const monthData = breakdown[month] as Record<string, number>
       return monthData.totalRevenue || 0

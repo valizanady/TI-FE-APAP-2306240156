@@ -537,27 +537,13 @@
                 {{ formatDate(pkg?.startDate) }} - {{ formatDate(pkg?.endDate) }}
               </span>
             </div>
-            <div class="detail-row">
+            <!-- <div class="detail-row">
               <span class="detail-label">Number of Plans:</span>
               <span class="detail-value">{{ pkg?.plans?.length || 0 }} plan(s)</span>
-            </div>
+            </div> -->
           </div>
 
           <div class="warning-message">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              class="warning-icon"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
-              />
-            </svg>
             <div>
               <p class="warning-title">This action cannot be undone</p>
               <p class="warning-text">
@@ -857,9 +843,12 @@ function formatDate(dateStr?: string) {
 }
 
 function statusBadge(status?: string) {
-  if (status === 'Pending') return 'badge badge-yellow'
-  if (status === 'Processed') return 'badge badge-green'
-  return 'badge badge-gray'
+  // Payment flow: Pending → Processed → Waiting for Payment → Payment Confirmed
+  if (status === 'Payment Confirmed') return 'badge badge-green' // Final state - Customer paid
+  if (status === 'Waiting for Payment') return 'badge badge-orange' // Bill created, awaiting payment
+  if (status === 'Processed') return 'badge badge-blue' // Admin processed, capacity reduced
+  if (status === 'Pending') return 'badge badge-yellow' // Initial state - Not yet processed
+  return 'badge badge-gray' // Fallback for unknown status
 }
 </script>
 
@@ -1418,13 +1407,27 @@ function statusBadge(status?: string) {
 }
 
 .badge-green {
-  background-color: #f0fdf4;
-  color: #15803d;
+  background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
+  color: #065f46;
+  box-shadow: 0 1px 3px rgba(6, 95, 70, 0.1);
+}
+
+.badge-blue {
+  background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+  color: #1e40af;
+  box-shadow: 0 1px 3px rgba(30, 64, 175, 0.1);
+}
+
+.badge-orange {
+  background: linear-gradient(135deg, #fed7aa 0%, #fdba74 100%);
+  color: #9a3412;
+  box-shadow: 0 1px 3px rgba(154, 52, 18, 0.1);
 }
 
 .badge-yellow {
-  background-color: #fef3c7;
-  color: #b45309;
+  background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+  color: #92400e;
+  box-shadow: 0 1px 3px rgba(146, 64, 14, 0.1);
 }
 
 .badge-gray {

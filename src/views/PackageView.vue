@@ -253,9 +253,26 @@ const columns: ColumnDef<Package>[] = [
     accessorKey: 'status',
     header: 'Status',
     cell: ({ row }) => {
-      const isProcessed = row.original.status === 'Processed'
-      const badgeClass = isProcessed ? 'badge badge-green' : 'badge badge-yellow'
-      return h('span', { class: badgeClass }, row.original.status)
+      const status = row.original.status
+      let badgeClass = 'badge badge-yellow' // default
+
+      // Status badge colors based on payment flow:
+      // Pending → Yellow (awaiting plans to be fulfilled)
+      // Processed → Blue (plans fulfilled, bill being created)
+      // Waiting for Payment → Orange (bill created, awaiting payment)
+      // Payment Confirmed → Green (payment completed)
+
+      if (status === 'Payment Confirmed') {
+        badgeClass = 'badge badge-green'
+      } else if (status === 'Waiting for Payment') {
+        badgeClass = 'badge badge-orange'
+      } else if (status === 'Processed') {
+        badgeClass = 'badge badge-blue'
+      } else if (status === 'Pending') {
+        badgeClass = 'badge badge-yellow'
+      }
+
+      return h('span', { class: badgeClass }, status)
     },
   },
   {
@@ -692,6 +709,16 @@ const columns: ColumnDef<Package>[] = [
 .badge-green {
   background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
   color: #065f46;
+}
+
+.badge-blue {
+  background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+  color: #1e40af;
+}
+
+.badge-orange {
+  background: linear-gradient(135deg, #fed7aa 0%, #fdba74 100%);
+  color: #9a3412;
 }
 
 .badge-yellow {
