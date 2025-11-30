@@ -33,7 +33,9 @@ jobs:
 
       - name: Build Vue app with ENV
         env:
-          _URL: ${{ env.VITE_API_BASE_URL }}
+          VITE_API_BASE_URL: ${{ env.VITE_API_BASE_URL }}
+          VITE_AUTH_SERVICE_URL: ${{ env.VITE_AUTH_SERVICE_URL }}
+          VITE_AUTH_BACKEND_URL: ${{ env.VITE_AUTH_BACKEND_URL }}
         run: |
           echo "🔧 Building with VITE_API_BASE_URL=$VITE_API_BASE_URL"
           npm run build
@@ -58,8 +60,13 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: dist-files
+          path: dist/
 
-      - name: Login to Docker Hub
+      - name: Debug - Check dist contents
+        run: |
+          echo "📁 Checking dist folder contents:"
+          ls -la dist/ || echo "❌ dist folder not found!"
+          echo "========================================="
         run: echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
 
       - name: Debug - Check ENV
@@ -74,7 +81,6 @@ jobs:
       - name: Build Docker image
         run: |
           docker build \
-            --build-arg VITE_API_BASE_URL="${{ env.VITE_API_BASE_URL }}" \
             --progress=plain \
             -t $DOCKER_IMAGE_NAME:$IMAGE_TAG \
             -t $DOCKER_IMAGE_NAME:latest .
