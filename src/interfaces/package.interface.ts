@@ -25,4 +25,9 @@ export interface Package {
   endDate: string
   isDeleted?: boolean
   plans: Plan[] // ✅ tambahkan ini
+
+  // ✅ Authorization metadata from backend
+  canViewPlans?: boolean   // Can current user see plan details?
+  canProcess?: boolean     // Can current user process this package?
+  accessMessage?: string   // Message about access restrictions
 }

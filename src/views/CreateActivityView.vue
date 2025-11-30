@@ -1,33 +1,39 @@
 <template>
-  <div class="min-h-screen bg-gray-50 py-8 px-4">
-    <div class="max-w-3xl mx-auto">
-      <!-- Header -->
-      <div class="mb-8">
-        <div class="flex items-center gap-4 mb-2">
-          <router-link to="/activities" class="text-gray-600 hover:text-gray-900">
-            ← Back
+  <div class="activity-create-container">
+    <div class="activity-create-wrapper">
+      <!-- Gradient Header -->
+      <div class="activity-header-gradient">
+        <div class="header-content">
+          <div class="header-text">
+            <h1 class="activity-title">➕ Create New Activity</h1>
+            <p class="activity-subtitle">Fill in the details to create a new activity</p>
+          </div>
+          <router-link to="/activities" class="btn-back-white">
+            <svg xmlns="http://www.w3.org/2000/svg" class="btn-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg>
+            Back to Activities
           </router-link>
-          <h1 class="text-3xl font-bold text-gray-900">➕ Create New Activity</h1>
         </div>
-        <p class="text-gray-600">Fill in the details to create a new activity</p>
       </div>
 
-      <!-- Form -->
-      <form @submit.prevent="submitForm" class="bg-white rounded-lg shadow-sm p-6 space-y-6">
+  <!-- Form Card -->
+  <form @submit.prevent="submitForm" class="form-card">
         <!-- Activity Type -->
-        <div>
+        <div class="form-group">
           <label class="form-label required">Activity Type</label>
-          <select v-model="formData.activityType" class="form-input" required>
-            <option value="">Select Activity Type</option>
-            <option v-for="type in allowedActivityTypes" :key="type" :value="type">
-              {{ type }}
-            </option>
-          </select>
+          <div class="input-icon-group">
+            <select v-model="formData.activityType" class="form-input" required>
+              <option value="">Select Activity Type</option>
+              <option v-for="type in allowedActivityTypes" :key="type" :value="type">
+                {{ type }}
+              </option>
+            </select>
+            <span v-if="formData.activityType" class="type-icon">{{ getTypeIcon(formData.activityType) }}</span>
+          </div>
           <p class="form-hint">Select the type of activity you want to create</p>
         </div>
 
         <!-- Activity Name -->
-        <div>
+        <div class="form-group">
           <label class="form-label required">Activity Name</label>
           <input
             v-model="formData.activityName"
@@ -41,7 +47,7 @@
         </div>
 
         <!-- Activity Item/Description -->
-        <div>
+        <div class="form-group">
           <label class="form-label required">Item/Description</label>
           <textarea
             v-model="formData.activityItem"
@@ -55,39 +61,42 @@
         </div>
 
         <!-- Price & Capacity -->
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <!-- Price -->
-          <div>
+        <div class="form-row">
+          <div class="form-group">
             <label class="form-label required">Price (IDR)</label>
-            <input
-              v-model.number="formData.price"
-              type="number"
-              class="form-input"
-              placeholder="100000"
-              required
-              min="0"
-              step="1000"
-            />
+            <div class="input-icon-group">
+              <input
+                v-model.number="formData.price"
+                type="number"
+                class="form-input"
+                placeholder="100000"
+                required
+                min="0"
+                step="1000"
+              />
+              <span class="input-icon">💰</span>
+            </div>
             <p class="form-hint">Price per person in Indonesian Rupiah</p>
           </div>
-
-          <!-- Capacity -->
-          <div>
+          <div class="form-group">
             <label class="form-label required">Capacity</label>
-            <input
-              v-model.number="formData.capacity"
-              type="number"
-              class="form-input"
-              placeholder="50"
-              required
-              min="1"
-            />
+            <div class="input-icon-group">
+              <input
+                v-model.number="formData.capacity"
+                type="number"
+                class="form-input"
+                placeholder="50"
+                required
+                min="1"
+              />
+              <span class="input-icon">👥</span>
+            </div>
             <p class="form-hint">Maximum number of people</p>
           </div>
         </div>
 
-        <!-- Locations -->
-        <div class="locations-wrapper">
+  <!-- Locations -->
+  <div class="locations-wrapper">
           <!-- Start Location Section -->
           <div class="location-section">
             <h3 class="location-title">Start Location <span class="required">*</span></h3>
@@ -184,46 +193,46 @@
         </div>
 
         <!-- Date & Time -->
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <!-- Start Date -->
-          <div>
+        <div class="form-row">
+          <div class="form-group">
             <label class="form-label required">Start Date & Time</label>
-            <input v-model="formData.startDate" type="datetime-local" class="form-input" required />
+            <div class="input-icon-group">
+              <input v-model="formData.startDate" type="datetime-local" class="form-input" required />
+              <span class="input-icon">🕒</span>
+            </div>
             <p class="form-hint">When does the activity start?</p>
           </div>
-
-          <!-- End Date -->
-          <div>
+          <div class="form-group">
             <label class="form-label required">End Date & Time</label>
-            <input
-              v-model="formData.endDate"
-              type="datetime-local"
-              class="form-input"
-              required
-              :min="formData.startDate"
-            />
+            <div class="input-icon-group">
+              <input
+                v-model="formData.endDate"
+                type="datetime-local"
+                class="form-input"
+                required
+                :min="formData.startDate"
+              />
+              <span class="input-icon">🕒</span>
+            </div>
             <p class="form-hint">When does the activity end?</p>
           </div>
         </div>
 
         <!-- Validation Errors -->
-        <div
-          v-if="validationErrors.length > 0"
-          class="bg-red-50 border border-red-200 rounded-lg p-4"
-        >
-          <h4 class="text-red-800 font-semibold mb-2">⚠️ Please fix the following errors:</h4>
-          <ul class="list-disc list-inside text-red-600 text-sm space-y-1">
+        <div v-if="validationErrors.length > 0" class="error-card">
+          <h4 class="error-title">⚠️ Please fix the following errors:</h4>
+          <ul class="error-list">
             <li v-for="(error, index) in validationErrors" :key="index">{{ error }}</li>
           </ul>
         </div>
 
         <!-- Action Buttons -->
-        <div class="flex gap-4 pt-4">
-          <button type="submit" :disabled="activityStore.isLoading" class="btn-primary flex-1">
+        <div class="form-actions">
+          <button type="submit" :disabled="activityStore.isLoading" class="btn-primary">
             <span v-if="activityStore.isLoading">Creating...</span>
             <span v-else>✓ Create Activity</span>
           </button>
-          <router-link to="/activities" class="btn-secondary"> Cancel </router-link>
+          <router-link to="/activities" class="btn-secondary">Cancel</router-link>
         </div>
       </form>
     </div>
@@ -231,6 +240,16 @@
 </template>
 
 <script setup lang="ts">
+// Icon helper for activity type
+const getTypeIcon = (type: string) => {
+  const icons: Record<string, string> = {
+    Flight: '✈️',
+    Accommodation: '🏨',
+    'Vehicle Rental': '🚗',
+    'Tour Activity': '🎯',
+  }
+  return icons[type] || '📋'
+}
 import { ref, computed, watch, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useActivityStore } from '@/stores/activity'
@@ -487,6 +506,144 @@ const submitForm = async () => {
 </script>
 
 <style scoped>
+/* Gradient Header */
+.activity-create-container {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #f5f7fa 0%, #e8eef5 100%);
+  padding: 2rem;
+}
+
+.activity-create-wrapper {
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+.activity-header-gradient {
+  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+  border-radius: 1rem;
+  padding: 2rem;
+  color: white;
+  margin-bottom: 2rem;
+  box-shadow: 0 10px 15px -3px rgba(99, 102, 241, 0.15);
+}
+
+.header-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.header-text {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.activity-title {
+  font-size: 2.25rem;
+  font-weight: 800;
+  margin: 0;
+}
+
+.activity-subtitle {
+  font-size: 1.125rem;
+  opacity: 0.9;
+  margin: 0;
+}
+
+.btn-back-white {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.5rem;
+  background-color: white;
+  color: #6366f1;
+  text-decoration: none;
+  border-radius: 0.5rem;
+  font-weight: 600;
+  transition: all 0.2s;
+}
+.btn-back-white:hover {
+  background-color: #f3f4f6;
+  transform: translateY(-1px);
+}
+.btn-icon {
+  width: 20px;
+  height: 20px;
+}
+
+/* Form Card */
+.form-card {
+  background-color: #fff;
+  border-radius: 1rem;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+  padding: 2rem;
+  margin-bottom: 2rem;
+}
+
+.form-actions {
+  display: flex;
+  gap: 1rem;
+  justify-content: flex-end;
+  margin-top: 2rem;
+}
+
+.input-icon-group {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.input-icon {
+  font-size: 1.25rem;
+  color: #6366f1;
+  background: #f3f4f6;
+  border-radius: 0.375rem;
+  padding: 0.25rem 0.5rem;
+}
+.type-icon {
+  font-size: 1.5rem;
+  margin-left: 0.5rem;
+}
+
+/* Error Card */
+.error-card {
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: 0.75rem;
+  padding: 1rem;
+  margin-bottom: 1rem;
+}
+.error-title {
+  color: #991b1b;
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+}
+.error-list {
+  color: #dc2626;
+  font-size: 0.95rem;
+  margin: 0;
+  padding-left: 1.25rem;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .activity-create-container {
+    padding: 1rem;
+  }
+  .activity-header-gradient {
+    padding: 1.25rem;
+  }
+  .form-card {
+    padding: 1rem;
+  }
+  .form-actions {
+    flex-direction: column-reverse;
+  }
+  .btn-primary,
+  .btn-secondary {
+    width: 100%;
+  }
+}
 .form-label {
   @apply block text-sm font-medium text-gray-700 mb-2;
 }

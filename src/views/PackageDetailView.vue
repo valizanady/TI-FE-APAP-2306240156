@@ -269,6 +269,25 @@
           </button>
         </div>
 
+        <!-- Access Message (for customers viewing admin/vendor packages) -->
+        <div v-if="pkg?.accessMessage && pkg.canViewPlans === false" class="access-message-card">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            class="info-icon"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+            />
+          </svg>
+          <p class="access-message-text">{{ pkg.accessMessage }}</p>
+        </div>
+
         <div v-if="!pkg?.plans || pkg.plans.length === 0" class="empty-plans">
           <svg
             xmlns="http://www.w3.org/2000/svg"
@@ -669,22 +688,26 @@ const showProcessButton = computed(() => {
   // ✅ Button is ONLY for Customer role
   if (userRole.value !== 'Customer') return false
 
-  // ✅ Customer can only see button for their own packages
-  const isOwnPackage = String(pkg.value.userId) === String(userId.value)
-  if (!isOwnPackage) return false
-
   // ✅ Package status must be Pending
   const isPending = pkg.value.status === 'Pending'
+  if (!isPending) return false
 
-  return isPending
+  // ✅ Show button for own packages OR packages from admin/vendor
+  // Customer can process any package as long as it's fulfilled
+  return true
 })
 
 // Computed: Check if Process Package button is enabled
 const canProcess = computed(() => {
-  if (!showProcessButton.value) return false
+  if (!showProcessButton.value || !pkg.value) return false
 
-  // ✅ All plans must exist and be Fulfilled to enable button
-  if (!pkg.value || !pkg.value.plans || pkg.value.plans.length === 0) return false
+  // ✅ Use backend's canProcess flag if available
+  if (pkg.value.canProcess !== undefined && pkg.value.canProcess !== null) {
+    return pkg.value.canProcess
+  }
+
+  // ✅ Fallback: Check if all plans are fulfilled (for backward compatibility)
+  if (!pkg.value.plans || pkg.value.plans.length === 0) return false
   const allPlansFulfilled = pkg.value.plans.every((plan) => plan.status === 'Fulfilled')
 
   return allPlansFulfilled
@@ -759,23 +782,35 @@ async function confirmProcessPackage() {
     return
   }
 
-  // ✅ FRONTEND VALIDATION 2: Must have at least 1 plan
-  if (!pkg.value.plans || pkg.value.plans.length === 0) {
-    alert('❌ This package cannot be processed because it has no plans.')
-    return  // Keep modal open
-  }
+  // ✅ Use backend's canProcess flag if available
+  if (pkg.value.canProcess !== undefined && pkg.value.canProcess !== null) {
+    if (!pkg.value.canProcess) {
+      alert('❌ This package cannot be processed yet. Please ensure all plans are fulfilled.')
+      return  // Keep modal open
+    }
+    // ✅ Backend says canProcess = true, skip frontend validations
+    // (Plans might be hidden for Customer viewing admin packages)
+  } else {
+    // ✅ Fallback to frontend validations (backward compatibility)
 
-  // ✅ FRONTEND VALIDATION 3: All plans must be Fulfilled
-  const hasUnfulfilledPlan = pkg.value.plans.some((plan) => plan.status !== 'Fulfilled')
-  if (hasUnfulfilledPlan) {
-    const fulfilledCount = pkg.value.plans.filter((p) => p.status === 'Fulfilled').length
-    const totalCount = pkg.value.plans.length
-    alert(
-      `❌ All plans must be fulfilled before processing this package.\n\n` +
-      `Current status: ${fulfilledCount}/${totalCount} plans fulfilled.\n\n` +
-      `Please ensure all plans are fulfilled first.`,
-    )
-    return  // Keep modal open
+    // VALIDATION 2: Must have at least 1 plan
+    if (!pkg.value.plans || pkg.value.plans.length === 0) {
+      alert('❌ This package cannot be processed because it has no plans.')
+      return  // Keep modal open
+    }
+
+    // VALIDATION 3: All plans must be Fulfilled
+    const hasUnfulfilledPlan = pkg.value.plans.some((plan) => plan.status !== 'Fulfilled')
+    if (hasUnfulfilledPlan) {
+      const fulfilledCount = pkg.value.plans.filter((p) => p.status === 'Fulfilled').length
+      const totalCount = pkg.value.plans.length
+      alert(
+        `❌ All plans must be fulfilled before processing this package.\n\n` +
+        `Current status: ${fulfilledCount}/${totalCount} plans fulfilled.\n\n` +
+        `Please ensure all plans are fulfilled first.`,
+      )
+      return  // Keep modal open
+    }
   }
 
   // ✅ All validations passed - call API
@@ -1172,6 +1207,43 @@ function statusBadge(status?: string) {
   width: 2rem;
   height: 2rem;
   color: #6b46c1;
+}
+
+/* Plans Section */
+.plans-section {
+  background-color: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 0.75rem;
+  padding: 1.5rem;
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+}
+
+/* Access Message Card */
+.access-message-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+  background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+  border: 1px solid #93c5fd;
+  border-radius: 0.75rem;
+  padding: 1.25rem;
+  margin-bottom: 1.5rem;
+}
+
+.info-icon {
+  width: 1.5rem;
+  height: 1.5rem;
+  color: #3b82f6;
+  flex-shrink: 0;
+  margin-top: 0.125rem;
+}
+
+.access-message-text {
+  margin: 0;
+  color: #1e40af;
+  font-size: 0.9375rem;
+  line-height: 1.6;
+  font-weight: 500;
 }
 
 /* Plans Section */

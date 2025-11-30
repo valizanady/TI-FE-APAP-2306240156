@@ -3,13 +3,17 @@ name: FE CI Pipeline
 on:
   push:
     branches:
-      - feat/praktikum-9
+      - main
+      - backlog
 
 env:
   DOCKER_IMAGE_NAME: ${{ secrets.DOCKER_IMAGE_NAME }}
   IMAGE_TAG: ${{ github.sha }}
-  # 🔥 HARDCODED - Langsung pakai URL backend
-  VITE_API_BASE_URL: http://2306240156-be.hafizmuh.site/
+  # Production URLs - Tour Package Service
+  VITE_API_BASE_URL: http://2306240156-be.hafizmuh.site/api
+  VITE_AUTH_SERVICE_URL: https://acc-fe.beel.my.id
+  VITE_AUTH_BACKEND_URL: http://2306240156-be.hafizmuh.site/api/auth
+
 
 jobs:
   build:
