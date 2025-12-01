@@ -1,0 +1,226 @@
+import { describe, it, expect, beforeEach, vi } from 'vitest'
+import { setActivePinia, createPinia } from 'pinia'
+import { useStatisticsStore } from '../statistics'
+
+// Create mock service methods
+const mockGetPotentialRevenue = vi.fn()
+const mockGetYearlyRevenue = vi.fn()
+const mockGetMonthlyRevenue = vi.fn()
+
+// Mock StatisticsService
+vi.mock('../../services/statistics.service', () => ({
+  StatisticsService: vi.fn().mockImplementation(() => ({
+    getPotentialRevenue: mockGetPotentialRevenue,
+    getYearlyRevenue: mockGetYearlyRevenue,
+    getMonthlyRevenue: mockGetMonthlyRevenue,
+  })),
+}))
+
+interface StatisticsResponse {
+  totalRevenue: number
+  month?: number
+  year: number
+  breakdown?: Array<{ activityType: string; revenue: number }>
+}
+
+describe('Statistics Store', () => {
+  beforeEach(() => {
+    setActivePinia(createPinia())
+    vi.clearAllMocks()
+  })
+
+  const mockStatistics: StatisticsResponse = {
+    totalRevenue: 5000000,
+    year: 2024,
+    month: 1,
+  }
+
+  describe('fetchStatistics', () => {
+    it('should fetch statistics with year only', async () => {
+      const store = useStatisticsStore()
+      const year = 2024
+
+      mockGetPotentialRevenue.mockResolvedValueOnce(mockStatistics)
+
+      await store.fetchStatistics(year)
+
+      expect(mockGetPotentialRevenue).toHaveBeenCalledWith(year, undefined)
+      expect(store.currentStatistics).toEqual(mockStatistics)
+      expect(store.loading).toBe(false)
+      expect(store.error).toBeNull()
+    })
+
+    it('should fetch statistics with year and month', async () => {
+      const store = useStatisticsStore()
+      const year = 2024
+      const month = 6
+
+      mockGetPotentialRevenue.mockResolvedValueOnce(mockStatistics)
+
+      await store.fetchStatistics(year, month)
+
+      expect(mockGetPotentialRevenue).toHaveBeenCalledWith(year, month)
+      expect(store.currentStatistics).toEqual(mockStatistics)
+      expect(store.loading).toBe(false)
+    })
+
+    it('should handle fetch statistics error', async () => {
+      const store = useStatisticsStore()
+      const errorMessage = 'Failed to fetch statistics'
+
+      mockGetPotentialRevenue.mockRejectedValueOnce({
+        response: {
+          data: { message: errorMessage },
+        },
+      })
+
+      await store.fetchStatistics(2024)
+
+      expect(store.error).toBe(errorMessage)
+      expect(store.loading).toBe(false)
+      expect(store.currentStatistics).toBeNull()
+    })
+
+    it('should handle generic error without response', async () => {
+      const store = useStatisticsStore()
+      const errorMessage = 'Network error'
+
+      mockGetPotentialRevenue.mockRejectedValueOnce(new Error(errorMessage))
+
+      await store.fetchStatistics(2024)
+
+      expect(store.error).toBe(errorMessage)
+      expect(store.loading).toBe(false)
+    })
+  })
+
+  describe('fetchYearlyRevenue', () => {
+    it('should fetch yearly revenue statistics', async () => {
+      const store = useStatisticsStore()
+      const year = 2024
+      const yearlyStats = {
+        totalRevenue: 60000000,
+        year: 2024,
+        breakdown: [
+          { activityType: 'Water Sports', revenue: 30000000 },
+          { activityType: 'Land Tours', revenue: 30000000 },
+        ],
+      }
+
+      mockGetYearlyRevenue.mockResolvedValueOnce(yearlyStats)
+
+      await store.fetchYearlyRevenue(year)
+
+      expect(mockGetYearlyRevenue).toHaveBeenCalledWith(year)
+      expect(store.currentStatistics).toEqual(yearlyStats)
+      expect(store.loading).toBe(false)
+      expect(store.error).toBeNull()
+    })
+
+    it('should handle fetch yearly revenue error', async () => {
+      const store = useStatisticsStore()
+      const errorMessage = 'Failed to fetch yearly statistics'
+
+      mockGetYearlyRevenue.mockRejectedValueOnce({
+        response: {
+          data: { message: errorMessage },
+        },
+      })
+
+      await store.fetchYearlyRevenue(2024)
+
+      expect(store.error).toBe(errorMessage)
+      expect(store.loading).toBe(false)
+    })
+  })
+
+  describe('fetchMonthlyRevenue', () => {
+    it('should fetch monthly revenue statistics', async () => {
+      const store = useStatisticsStore()
+      const year = 2024
+      const month = 3
+      const monthlyStats = {
+        totalRevenue: 8000000,
+        year: 2024,
+        month: 3,
+        breakdown: [
+          { activityType: 'Water Sports', revenue: 5000000 },
+          { activityType: 'Cultural Tours', revenue: 3000000 },
+        ],
+      }
+
+      mockGetMonthlyRevenue.mockResolvedValueOnce(monthlyStats)
+
+      await store.fetchMonthlyRevenue(year, month)
+
+      expect(mockGetMonthlyRevenue).toHaveBeenCalledWith(year, month)
+      expect(store.currentStatistics).toEqual(monthlyStats)
+      expect(store.loading).toBe(false)
+      expect(store.error).toBeNull()
+    })
+
+    it('should handle fetch monthly revenue error', async () => {
+      const store = useStatisticsStore()
+      const errorMessage = 'Failed to fetch monthly statistics'
+
+      mockGetMonthlyRevenue.mockRejectedValueOnce({
+        response: {
+          data: { message: errorMessage },
+        },
+      })
+
+      await store.fetchMonthlyRevenue(2024, 6)
+
+      expect(store.error).toBe(errorMessage)
+      expect(store.loading).toBe(false)
+    })
+  })
+
+  describe('clearError', () => {
+    it('should clear error message', () => {
+      const store = useStatisticsStore()
+      store.error = 'Some error'
+
+      store.clearError()
+
+      expect(store.error).toBeNull()
+    })
+  })
+
+  describe('state management', () => {
+    it('should have correct initial state', () => {
+      const store = useStatisticsStore()
+
+      expect(store.currentStatistics).toBeNull()
+      expect(store.loading).toBe(false)
+      expect(store.error).toBeNull()
+    })
+
+    it('should set loading state during async operations', async () => {
+      const store = useStatisticsStore()
+
+      mockGetPotentialRevenue.mockImplementation(
+        () =>
+          new Promise((resolve) => {
+            expect(store.loading).toBe(true)
+            setTimeout(() => resolve(mockStatistics), 10)
+          })
+      )
+
+      await store.fetchStatistics(2024)
+
+      expect(store.loading).toBe(false)
+    })
+
+    it('should reset error on new fetch attempt', async () => {
+      const store = useStatisticsStore()
+      store.error = 'Previous error'
+
+      mockGetPotentialRevenue.mockResolvedValueOnce(mockStatistics)
+
+      await store.fetchStatistics(2024)
+
+      expect(store.error).toBeNull()
+    })
+  })
+})

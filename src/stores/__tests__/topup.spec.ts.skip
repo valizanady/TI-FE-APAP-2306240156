@@ -1,0 +1,234 @@
+import { describe, it, expect, beforeEach, vi } from 'vitest'
+import { setActivePinia, createPinia } from 'pinia'
+import { useTopUpStore } from '../topup'
+
+// Create mock service methods
+const mockGetAllTransactions = vi.fn()
+const mockGetAllPaymentMethods = vi.fn()
+const mockCreateTransaction = vi.fn()
+
+// Mock TopUpService
+vi.mock('../../services/topup.service', () => ({
+  TopUpService: vi.fn().mockImplementation(() => ({
+    getAllTransactions: mockGetAllTransactions,
+    getAllPaymentMethods: mockGetAllPaymentMethods,
+    createTransaction: mockCreateTransaction,
+  })),
+}))
+
+interface TopUpTransaction {
+  id: string
+  userId: string
+  amount: number
+  paymentMethodId: string
+  status: string
+  createdAt: string
+}
+
+interface PaymentMethod {
+  id: string
+  name: string
+  status: string
+}
+
+describe('TopUp Store', () => {
+  beforeEach(() => {
+    setActivePinia(createPinia())
+    vi.clearAllMocks()
+  })
+
+  const mockTransaction: TopUpTransaction = {
+    id: '1',
+    userId: 'user123',
+    amount: 100000,
+    paymentMethodId: 'pm1',
+    status: 'Pending',
+    createdAt: '2024-01-01',
+  }
+
+  const mockPaymentMethod: PaymentMethod = {
+    id: 'pm1',
+    name: 'Bank Transfer',
+    status: 'Active',
+  }
+
+  describe('fetchTransactions', () => {
+    it('should fetch all transactions successfully', async () => {
+      const store = useTopUpStore()
+      const mockTransactions = [
+        mockTransaction,
+        { ...mockTransaction, id: '2', status: 'Success' },
+      ]
+
+      mockGetAllTransactions.mockResolvedValueOnce(mockTransactions)
+
+      await store.fetchTransactions()
+
+      expect(store.transactions).toEqual(mockTransactions)
+      expect(store.isLoading).toBe(false)
+      expect(store.error).toBeNull()
+    })
+
+    it('should handle fetch transactions error', async () => {
+      const store = useTopUpStore()
+      const errorMessage = 'Failed to fetch transactions'
+
+      mockGetAllTransactions.mockRejectedValueOnce(new Error(errorMessage))
+
+      await expect(store.fetchTransactions()).rejects.toThrow()
+      expect(store.error).toBe(errorMessage)
+      expect(store.isLoading).toBe(false)
+    })
+  })
+
+  describe('fetchPaymentMethods', () => {
+    it('should fetch all payment methods successfully', async () => {
+      const store = useTopUpStore()
+      const mockPaymentMethods = [
+        mockPaymentMethod,
+        { ...mockPaymentMethod, id: 'pm2', name: 'E-Wallet', status: 'Active' },
+      ]
+
+      mockGetAllPaymentMethods.mockResolvedValueOnce(mockPaymentMethods)
+
+      await store.fetchPaymentMethods()
+
+      expect(store.paymentMethods).toEqual(mockPaymentMethods)
+      expect(store.isLoading).toBe(false)
+      expect(store.error).toBeNull()
+    })
+
+    it('should handle fetch payment methods error', async () => {
+      const store = useTopUpStore()
+      const errorMessage = 'Failed to fetch payment methods'
+
+      mockGetAllPaymentMethods.mockRejectedValueOnce(new Error(errorMessage))
+
+      await expect(store.fetchPaymentMethods()).rejects.toThrow()
+      expect(store.error).toBe(errorMessage)
+      expect(store.isLoading).toBe(false)
+    })
+  })
+
+  describe('createTransaction', () => {
+    it('should create transaction successfully', async () => {
+      const store = useTopUpStore()
+      const createData = {
+        amount: 100000,
+        paymentMethodId: 'pm1',
+      }
+
+      mockCreateTransaction.mockResolvedValueOnce(mockTransaction)
+      mockGetAllTransactions.mockResolvedValueOnce([mockTransaction])
+
+      const result = await store.createTransaction(createData)
+
+      expect(mockCreateTransaction).toHaveBeenCalledWith(createData)
+      expect(result).toEqual(mockTransaction)
+      expect(mockGetAllTransactions).toHaveBeenCalled()
+    })
+
+    it('should handle create transaction error', async () => {
+      const store = useTopUpStore()
+      const createData = {
+        amount: -100,
+        paymentMethodId: 'invalid',
+      }
+      const errorMessage = 'Invalid amount'
+
+      mockCreateTransaction.mockRejectedValueOnce(new Error(errorMessage))
+
+      await expect(store.createTransaction(createData)).rejects.toThrow()
+      expect(store.error).toBe(errorMessage)
+    })
+  })
+
+  describe('getters', () => {
+    it('should get all transactions', () => {
+      const store = useTopUpStore()
+      store.transactions = [mockTransaction]
+
+      expect(store.getTransactions).toEqual([mockTransaction])
+    })
+
+    it('should get active payment methods only', () => {
+      const store = useTopUpStore()
+      store.paymentMethods = [
+        mockPaymentMethod,
+        { ...mockPaymentMethod, id: 'pm2', status: 'Inactive' },
+        { ...mockPaymentMethod, id: 'pm3', status: 'Active' },
+      ]
+
+      const activePaymentMethods = store.getPaymentMethods
+
+      expect(activePaymentMethods).toHaveLength(2)
+      expect(activePaymentMethods.every((pm: PaymentMethod) => pm.status === 'Active')).toBe(true)
+    })
+
+    it('should get pending transactions only', () => {
+      const store = useTopUpStore()
+      store.transactions = [
+        mockTransaction,
+        { ...mockTransaction, id: '2', status: 'Success' },
+        { ...mockTransaction, id: '3', status: 'Pending' },
+      ]
+
+      const pendingTransactions = store.getPendingTransactions
+
+      expect(pendingTransactions).toHaveLength(2)
+      expect(pendingTransactions.every((t: TopUpTransaction) => t.status === 'Pending')).toBe(true)
+    })
+
+    it('should get success transactions only', () => {
+      const store = useTopUpStore()
+      store.transactions = [
+        mockTransaction,
+        { ...mockTransaction, id: '2', status: 'Success' },
+        { ...mockTransaction, id: '3', status: 'Success' },
+      ]
+
+      const successTransactions = store.getSuccessTransactions
+
+      expect(successTransactions).toHaveLength(2)
+      expect(successTransactions.every((t: TopUpTransaction) => t.status === 'Success')).toBe(true)
+    })
+
+    it('should get all payment methods including inactive', () => {
+      const store = useTopUpStore()
+      const allMethods = [
+        mockPaymentMethod,
+        { ...mockPaymentMethod, id: 'pm2', status: 'Inactive' },
+      ]
+      store.paymentMethods = allMethods
+
+      expect(store.getAllPaymentMethods).toEqual(allMethods)
+    })
+  })
+
+  describe('state management', () => {
+    it('should have correct initial state', () => {
+      const store = useTopUpStore()
+
+      expect(store.transactions).toEqual([])
+      expect(store.paymentMethods).toEqual([])
+      expect(store.isLoading).toBe(false)
+      expect(store.error).toBeNull()
+    })
+
+    it('should set loading state during async operations', async () => {
+      const store = useTopUpStore()
+
+      mockGetAllTransactions.mockImplementation(
+        () =>
+          new Promise((resolve) => {
+            expect(store.isLoading).toBe(true)
+            setTimeout(() => resolve([]), 10)
+          })
+      )
+
+      await store.fetchTransactions()
+
+      expect(store.isLoading).toBe(false)
+    })
+  })
+})

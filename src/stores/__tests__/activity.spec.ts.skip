@@ -1,0 +1,283 @@
+import { describe, it, expect, beforeEach, vi } from 'vitest'
+import { setActivePinia, createPinia } from 'pinia'
+import { useActivityStore } from '../activity'
+
+// Create mock service methods
+const mockGetAllActivities = vi.fn()
+const mockGetActivityById = vi.fn()
+const mockCreateActivity = vi.fn()
+const mockUpdateActivity = vi.fn()
+const mockDeleteActivity = vi.fn()
+
+// Mock ActivityService
+vi.mock('../../services/activity.service', () => ({
+  ActivityService: vi.fn().mockImplementation(() => ({
+    getAllActivities: mockGetAllActivities,
+    getActivityById: mockGetActivityById,
+    createActivity: mockCreateActivity,
+    updateActivity: mockUpdateActivity,
+    deleteActivity: mockDeleteActivity,
+  })),
+}))
+
+interface Activity {
+  id: string
+  activityName: string
+  activityType: string
+  price: number
+  startDate: string
+  endDate: string
+  startLocation: string
+  endLocation: string
+  isDeleted: boolean
+}
+
+describe('Activity Store', () => {
+  beforeEach(() => {
+    setActivePinia(createPinia())
+    vi.clearAllMocks()
+  })
+
+  const mockActivity: Activity = {
+    id: '1',
+    activityName: 'Beach Snorkeling',
+    activityType: 'Water Sports',
+    price: 500000,
+    startDate: '2024-01-01',
+    endDate: '2024-01-01',
+    startLocation: 'Bali Beach',
+    endLocation: 'Bali Beach',
+    isDeleted: false,
+  }
+
+  describe('fetchActivities', () => {
+    it('should fetch all activities successfully', async () => {
+      const store = useActivityStore()
+      const mockActivities = [
+        mockActivity,
+        { ...mockActivity, id: '2', activityName: 'Mountain Hiking' },
+      ]
+
+      mockGetAllActivities.mockResolvedValueOnce(mockActivities)
+
+      await store.fetchActivities()
+
+      expect(store.activities).toEqual(mockActivities)
+      expect(store.isLoading).toBe(false)
+      expect(store.error).toBeNull()
+    })
+
+    it('should fetch activities with filters', async () => {
+      const store = useActivityStore()
+      const filters = { activityType: 'Water Sports' }
+      const filteredActivities = [mockActivity]
+
+      mockGetAllActivities.mockResolvedValueOnce(filteredActivities)
+
+      await store.fetchActivities(filters)
+
+      expect(mockGetAllActivities).toHaveBeenCalledWith(filters)
+      expect(store.activities).toEqual(filteredActivities)
+    })
+
+    it('should handle fetch error', async () => {
+      const store = useActivityStore()
+      const errorMessage = 'Failed to fetch activities'
+
+      mockGetAllActivities.mockRejectedValueOnce(new Error(errorMessage))
+
+      await store.fetchActivities()
+
+      expect(store.error).toBe(errorMessage)
+      expect(store.isLoading).toBe(false)
+    })
+  })
+
+  describe('fetchActivityById', () => {
+    it('should fetch activity by id successfully', async () => {
+      const store = useActivityStore()
+      const activityId = '1'
+
+      mockGetActivityById.mockResolvedValueOnce(mockActivity)
+
+      await store.fetchActivityById(activityId)
+
+      expect(store.currentActivity).toEqual(mockActivity)
+      expect(mockGetActivityById).toHaveBeenCalledWith(activityId)
+    })
+
+    it('should handle fetch by id error', async () => {
+      const store = useActivityStore()
+      const activityId = 'invalid-id'
+      const errorMessage = 'Activity not found'
+
+      mockGetActivityById.mockRejectedValueOnce(new Error(errorMessage))
+
+      await store.fetchActivityById(activityId)
+
+      expect(store.error).toBe(errorMessage)
+      expect(store.currentActivity).toBeNull()
+    })
+  })
+
+  describe('createActivity', () => {
+    it('should create activity successfully', async () => {
+      const store = useActivityStore()
+      const newActivityData = {
+        activityName: 'Surfing Lesson',
+        activityType: 'Water Sports',
+        price: 750000,
+        startDate: '2024-02-01',
+        endDate: '2024-02-01',
+        startLocation: 'Kuta Beach',
+        endLocation: 'Kuta Beach',
+      }
+      const createdActivity = { ...mockActivity, ...newActivityData, id: '3' }
+
+      mockCreateActivity.mockResolvedValueOnce(createdActivity)
+      mockGetAllActivities.mockResolvedValueOnce([createdActivity])
+
+      await store.createActivity(newActivityData)
+
+      expect(mockCreateActivity).toHaveBeenCalledWith(newActivityData)
+      expect(mockGetAllActivities).toHaveBeenCalled()
+    })
+
+    it('should handle create error', async () => {
+      const store = useActivityStore()
+      const newActivityData = {
+        activityName: 'Invalid Activity',
+        activityType: 'Unknown',
+        price: -100,
+        startDate: '2024-02-01',
+        endDate: '2024-02-01',
+        startLocation: 'Location',
+        endLocation: 'Location',
+      }
+      const errorMessage = 'Validation failed'
+
+      mockCreateActivity.mockRejectedValueOnce(new Error(errorMessage))
+
+      await expect(store.createActivity(newActivityData)).rejects.toThrow()
+      expect(store.error).toBe(errorMessage)
+    })
+  })
+
+  describe('updateActivity', () => {
+    it('should update activity successfully', async () => {
+      const store = useActivityStore()
+      const activityId = '1'
+      const updateData = {
+        activityName: 'Updated Activity',
+        price: 600000,
+      }
+
+      mockUpdateActivity.mockResolvedValueOnce({ ...mockActivity, ...updateData })
+      mockGetAllActivities.mockResolvedValueOnce([])
+
+      await store.updateActivity(activityId, updateData)
+
+      expect(mockUpdateActivity).toHaveBeenCalledWith(activityId, updateData)
+      expect(mockGetAllActivities).toHaveBeenCalled()
+    })
+
+    it('should handle update error', async () => {
+      const store = useActivityStore()
+      const activityId = '1'
+      const updateData = { price: -100 }
+      const errorMessage = 'Invalid price'
+
+      mockUpdateActivity.mockRejectedValueOnce(new Error(errorMessage))
+
+      await expect(store.updateActivity(activityId, updateData)).rejects.toThrow()
+      expect(store.error).toBe(errorMessage)
+    })
+  })
+
+  describe('deleteActivity', () => {
+    it('should delete activity successfully', async () => {
+      const store = useActivityStore()
+      const activityId = '1'
+
+      mockDeleteActivity.mockResolvedValueOnce(undefined)
+      mockGetAllActivities.mockResolvedValueOnce([])
+
+      await store.deleteActivity(activityId)
+
+      expect(mockDeleteActivity).toHaveBeenCalledWith(activityId)
+      expect(mockGetAllActivities).toHaveBeenCalled()
+    })
+
+    it('should handle delete error', async () => {
+      const store = useActivityStore()
+      const activityId = 'invalid-id'
+      const errorMessage = 'Activity not found'
+
+      mockDeleteActivity.mockRejectedValueOnce(new Error(errorMessage))
+
+      await expect(store.deleteActivity(activityId)).rejects.toThrow()
+      expect(store.error).toBe(errorMessage)
+    })
+  })
+
+  describe('getters', () => {
+    it('should get active activities only', () => {
+      const store = useActivityStore()
+      store.activities = [
+        mockActivity,
+        { ...mockActivity, id: '2', isDeleted: true },
+        { ...mockActivity, id: '3', isDeleted: false },
+      ]
+
+      const activeActivities = store.getActiveActivities
+
+      expect(activeActivities).toHaveLength(2)
+      expect(activeActivities.every((a: Activity) => !a.isDeleted)).toBe(true)
+    })
+
+    it('should get activities by type', () => {
+      const store = useActivityStore()
+      store.activities = [
+        mockActivity,
+        { ...mockActivity, id: '2', activityType: 'Land Tours' },
+        { ...mockActivity, id: '3', activityType: 'Water Sports' },
+      ]
+
+      const waterSports = store.getActivitiesByType('Water Sports')
+
+      expect(waterSports).toHaveLength(2)
+      expect(waterSports.every((a: Activity) => a.activityType === 'Water Sports')).toBe(true)
+    })
+
+    it('should get unique activity types', () => {
+      const store = useActivityStore()
+      store.activities = [
+        mockActivity,
+        { ...mockActivity, id: '2', activityType: 'Land Tours' },
+        { ...mockActivity, id: '3', activityType: 'Water Sports' },
+        { ...mockActivity, id: '4', activityType: 'Land Tours' },
+      ]
+
+      const types = store.getActivityTypes
+
+      expect(types).toHaveLength(2)
+      expect(types).toContain('Water Sports')
+      expect(types).toContain('Land Tours')
+    })
+
+    it('should get unique locations', () => {
+      const store = useActivityStore()
+      store.activities = [
+        mockActivity,
+        { ...mockActivity, id: '2', startLocation: 'Ubud', endLocation: 'Ubud' },
+        { ...mockActivity, id: '3', startLocation: 'Bali Beach', endLocation: 'Nusa Dua' },
+      ]
+
+      const locations = store.getLocations
+
+      expect(locations).toContain('Bali Beach')
+      expect(locations).toContain('Ubud')
+      expect(locations).toContain('Nusa Dua')
+    })
+  })
+})

@@ -3,7 +3,7 @@ name: FE CI Pipeline
 on:
   push:
     branches:
-      - master
+      - main
       - backlog
 
 env:
